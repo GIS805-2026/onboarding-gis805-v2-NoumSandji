@@ -97,3 +97,298 @@ GROUP BY p.category, s.region, d.quarter
 ORDER BY revenue DESC
 LIMIT 10;
 - **Justification :** être sûre que les donnons contiennent tous les éléments nécessaires pour la réponse à question du CEO
+
+
+
+### 2026-05-17 - séance S02
+- **modèle :** Codex avec chat GPT
+- **prompt :**  "tu peux m'expliquer le fichier s02-sample-brief.md"
+- **Resultat :** Oui. Ce fichier docs/s02-sample-brief.md est un exemple annoté du brief attendu pour la séance S02. Ce n’est pas le fichier à rendre : ton vrai livrable est indiqué au début, dans answers/S02_executive_brief.md.
+Le but du brief est de répondre à la question du CEO :
+Quelles catégories de produits déclinent dans quelles régions, par trimestre ?
+Le document montre la structure attendue :
+Grain statement
+Il faut définir précisément ce que représente une ligne de la table de faits.
+Ici : 1 ligne = 1 ligne de commande, identifiée par (order_number, sale_line_id).
+C’est important parce que toutes les mesures SQL doivent être cohérentes avec ce niveau de détail.
+
+Étoile construite
+Le fichier donne un exemple de schéma en étoile avec une table centrale FACT_SALES et 5 dimensions :
+DIM_DATE, DIM_PRODUCT, DIM_STORE, DIM_CUSTOMER, DIM_CHANNEL.
+La table de faits contient les mesures comme :
+quantity
+net_price
+line_total
+discount_pct
+Il précise aussi quelles mesures sont additives ou non. Par exemple, line_total peut être additionné, mais discount_pct ne doit pas être simplement additionné.
+
+SQL preuve
+La requête SQL sert à prouver que le modèle répond bien à la question du CEO.
+Elle regroupe les ventes par :
+catégorie produit
+région
+trimestre
+Puis elle calcule :
+le revenu total avec SUM(f.line_total)
+le nombre de lignes avec COUNT(*)
+
+Réponse au CEO
+La dernière section traduit les résultats en langage business.
+Au lieu de seulement montrer du SQL, elle explique ce qu’on observe et propose une action concrète.
+
+En gros, ce fichier est un modèle de ce qu’il faut produire : définition du grain, schéma en étoile, requête SQL qui répond à la question, puis conclusion business courte. Les annotations [-> ...] expliquent pourquoi chaque partie est bien faite.
+
+- **Validation :** J'ai comparé avec le contenu du fichier
+- **Justification :** je voulais comprendre ce que je dois faire
+
+- **modèle :** Codex avec chat GPT
+- **prompt :** voici mon grain : **1 ligne = 1 ligne de commande** identifiée par (order_number, sale_line_id) concernant un produit,effectuée par un client dans un magasin par un canal de vente à une date donnée. , *« Génère un diagramme Mermaid erDiagram pour mon étoile NexaMart.
+> Au centre : FACT_SALES au grain « une ligne de commande »
+> (order_number + sale_line_id), avec les mesures quantity, net_price,
+> line_total, discount_pct. Cinq dimensions reliées par FK :
+> dim_date, dim_product, dim_store, dim_customer, dim_channel.
+> Inclus le bloc dans un fichier Markdown. »*"
+- **Resultat :**```mermaid
+erDiagram
+    DIM_DATE     ||--o{ FACT_SALES : "order_date"
+    DIM_PRODUCT  ||--o{ FACT_SALES : "product_id"
+    DIM_STORE    ||--o{ FACT_SALES : "store_id"
+    DIM_CUSTOMER ||--o{ FACT_SALES : "customer_id"
+    DIM_CHANNEL  ||--o{ FACT_SALES : "channel_id"
+
+    FACT_SALES {
+        string  order_number  "degenerate dimension"
+        int     sale_line_id  "line identifier"
+        int     product_id    FK
+        int     store_id      FK
+        int     customer_id   FK
+        int     channel_id    FK
+        date    order_date    FK
+        int     quantity      "additive"
+        decimal net_price     "additive"
+        decimal line_total    "additive"
+        decimal discount_pct  "non-additive"
+    }
+
+    DIM_DATE {
+        date   date_key PK
+        int    year
+        string quarter
+        int    month
+    }
+
+    DIM_PRODUCT {
+        int    product_id PK
+        string product_name
+        string category
+        string subcategory
+    }
+
+    DIM_STORE {
+        int    store_id PK
+        string store_name
+        string region
+        string province
+    }
+
+    DIM_CUSTOMER {
+        int    customer_id PK
+        string customer_name
+        string segment
+    }
+
+    DIM_CHANNEL {
+        int    channel_id PK
+        string channel_name
+    }
+```
+
+- **Validation :** j'ai comparé avec celui attendu
+- **Justification :** je voulais me rassurer que mon modèle soit cohérent
+
+- **modèle :** Codex avec chat GPT
+- **prompt :** "tu vois mon fichier 01_dimfrom_raw.sql? j'aimerais que tu me crées et adaptes ces fichiers pour chacune de ces dimensions : dim_product, dim_customer, dim_store, dim_date,
+dim_channel dans le repertoire dims"
+- **Resultat :**C’est fait. J’ai créé les 5 fichiers dans sql/dims :
+dim_product.sql
+dim_customer.sql
+dim_store.sql
+dim_date.sql
+dim_channel.sql
+Chaque fichier crée sa table dim_* à partir de la table raw_dim_*, ajoute une clé substitut quand c’est pertinent, conserve la clé naturelle, ajoute loaded_at, puis exécute deux vérifications : unicité de la clé et absence de clé naturelle nulle.
+J’ai aussi testé les 5 scripts sur une copie temporaire de ta base DuckDB : tous les checks retournent PASS.
+
+- **Validation :** j'ai parcourru les répertoires listés pour avoir les mêmes informations fournies par l'agent
+- **Justification :** je voulais me rassurer que les fichiers soient créés sans erreurs
+
+- **modèle :** Codex avec chat GPT
+- **prompt :** " j'ai une question, est ce que CURRENT_DATE                            AS loaded_at est nécessaire pour toute les tables?"
+- **Resultat :** Non, ce n’est pas strictement nécessaire pour toutes les tables.
+
+CURRENT_DATE AS loaded_at sert surtout à garder une trace de la date à laquelle la dimension a été chargée ou reconstruite. C’est une colonne technique utile pour l’audit, le debugging, ou pour savoir “quand cette table a été générée”.
+
+Dans ton contexte S02, tu peux la garder dans toutes les dimensions : c’est propre, cohérent, et ça montre une bonne pratique de pipeline.
+
+Mais côté modèle métier, elle n’est pas indispensable. Les dimensions pourraient fonctionner parfaitement sans loaded_at:
+
+- **Validation :** pas de validation
+- **Justification :** juste pour me rassurer de la necessité de  cette colonne ou champ dans toutesles dimensions
+
+- **modèle :** Codex avec chat GPT
+- **prompt :** " make load"
+- **Resultat :** python src/run_pipeline.py
+
+-- Loading 24 CSVs into DuckDB --
+
+  raw_fact_sales                              2,147 rows  <- data/synthetic/team_1802767793/s06/fact_sales.csv
+  raw_customer_changes                          122 rows  <- data/synthetic/team_1802767793/s03/customer_changes.csv
+  raw_store_changes                               5 rows  <- data/synthetic/team_1802767793/s03/store_changes.csv
+  raw_order_lines                             1,904 rows  <- data/synthetic/team_1802767793/s04/order_lines.csv
+  raw_orders                                    690 rows  <- data/synthetic/team_1802767793/s04/orders.csv
+  raw_fact_budget                             1,200 rows  <- data/synthetic/team_1802767793/s06/fact_budget.csv
+  raw_fact_inventory_snapshot                 5,671 rows  <- data/synthetic/team_1802767793/s06/fact_inventory_snapshot.csv
+  raw_fact_returns                              168 rows  <- data/synthetic/team_1802767793/s06/fact_returns.csv
+  raw_customer_profile_bands                    159 rows  <- data/synthetic/team_1802767793/s07/customer_profile_bands.csv
+  raw_dim_geography                              11 rows  <- data/synthetic/team_1802767793/s07/dim_geography.csv
+  raw_fact_shipment                             903 rows  <- data/synthetic/team_1802767793/s07/fact_shipment.csv
+  raw_bridge_campaign_allocation                 22 rows  <- data/synthetic/team_1802767793/s08/bridge_campaign_allocation.csv
+  raw_bridge_customer_segment                   235 rows  <- data/synthetic/team_1802767793/s08/bridge_customer_segment.csv
+  raw_customer_scd3_history                     159 rows  <- data/synthetic/team_1802767793/s08/customer_scd3_history.csv
+  raw_dim_segment_outrigger                       6 rows  <- data/synthetic/team_1802767793/s08/dim_segment_outrigger.csv
+  raw_fact_daily_inventory                    1,500 rows  <- data/synthetic/team_1802767793/s09/fact_daily_inventory.csv
+  raw_fact_order_pipeline                       712 rows  <- data/synthetic/team_1802767793/s09/fact_order_pipeline.csv
+  raw_fact_orders_transaction                 1,105 rows  <- data/synthetic/team_1802767793/s09/fact_orders_transaction.csv
+  raw_fact_promo_exposure                        75 rows  <- data/synthetic/team_1802767793/s09/fact_promo_exposure.csv
+  raw_dim_channel                                 5 rows  <- data/synthetic/team_1802767793/shared/dim_channel.csv
+  raw_dim_customer                              159 rows  <- data/synthetic/team_1802767793/shared/dim_customer.csv
+  raw_dim_date                                  731 rows  <- data/synthetic/team_1802767793/shared/dim_date.csv
+  raw_dim_product                                50 rows  <- data/synthetic/team_1802767793/shared/dim_product.csv
+  raw_dim_store                                  10 rows  <- data/synthetic/team_1802767793/shared/dim_store.csv
+  OK sql/dims/dim_channel.sql
+  OK sql/dims/dim_customer.sql
+  OK sql/dims/dim_date.sql
+  OK sql/dims/dim_product.sql
+  OK sql/dims/dim_store.sql
+  (5 file(s) from sql/dims/)
+
+============================================================
+  29 tables in db/nexamart.duckdb
+============================================================
+  dim_channel                                     5 rows
+  dim_customer                                  159 rows
+  dim_date                                      731 rows
+  dim_product                                    50 rows
+  dim_store                                      10 rows
+  raw_bridge_campaign_allocation                 22 rows
+  raw_bridge_customer_segment                   235 rows
+  raw_customer_changes                          122 rows
+  raw_customer_profile_bands                    159 rows
+  raw_customer_scd3_history                     159 rows
+  raw_dim_channel                                 5 rows
+  raw_dim_customer                              159 rows
+  raw_dim_date                                  731 rows
+  raw_dim_geography                              11 rows
+  raw_dim_product                                50 rows
+  raw_dim_segment_outrigger                       6 rows
+  raw_dim_store                                  10 rows
+  raw_fact_budget                             1,200 rows
+  raw_fact_daily_inventory                    1,500 rows
+  raw_fact_inventory_snapshot                 5,671 rows
+  raw_fact_order_pipeline                       712 rows
+  raw_fact_orders_transaction                 1,105 rows
+  raw_fact_promo_exposure                        75 rows
+  raw_fact_returns                              168 rows
+  raw_fact_sales                              2,147 rows
+  raw_fact_shipment                             903 rows
+  raw_order_lines                             1,904 rows
+  raw_orders                                    690 rows
+  raw_store_changes                               5 rows
+
+Done. Database: db/nexamart.duckdb
+@NoumSandji ➜ /workspaces/onboarding-gis805-v2-NoumSandji (main) $ make check
+python src/run_checks.py
+============================================
+NexaMart Validation: 15 PASS, 8 FAIL, 9 SKIP
+============================================
+
+[PASS]  TABLE_EXISTS     dim_date                                       PASS
+[PASS]  TABLE_EXISTS     dim_product                                    PASS
+[PASS]  TABLE_EXISTS     dim_store                                      PASS
+[PASS]  TABLE_EXISTS     dim_customer                                   PASS
+[PASS]  TABLE_EXISTS     dim_channel                                    PASS
+[FAIL]  TABLE_EXISTS     fact_sales                                     FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_returns                                   FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_budget                                    FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_daily_inventory                           FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_order_pipeline                            FAIL -- table not present
+[FAIL]  TABLE_EXISTS     bridge_customer_segment                        FAIL -- table not present
+[FAIL]  TABLE_EXISTS     junk_order_profile                             FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_promo_exposure                            FAIL -- table not present
+[PASS]  ROW_COUNT        dim_date                                       PASS
+[PASS]  ROW_COUNT        dim_product                                    PASS
+[PASS]  ROW_COUNT        dim_store                                      PASS
+[PASS]  ROW_COUNT        dim_channel                                    PASS
+[PASS]  ROW_COUNT        dim_customer                                   PASS
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[PASS]  PK_UNIQUE        dim_date.date_key                              PASS
+[PASS]  PK_UNIQUE        dim_product.product_id                         PASS
+[PASS]  PK_UNIQUE        dim_store.store_id                             PASS
+[PASS]  PK_UNIQUE        dim_channel.channel_id                         PASS
+[PASS]  PK_UNIQUE        dim_customer.customer_key                      PASS
+[SKIP]  ERROR            Binder Error: Referenced column "is_current" not found in FROM clause!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name bridge_customer_segment does not exist!
+
+Results saved to validation/results/check_results.txt
+make: *** [Makefile:43: check] Error 1
+
+- **Validation :** make check
+- **Justification :** pour me rassurer que les tables de dimensions existent
+python src/run_checks.py
+============================================
+NexaMart Validation: 15 PASS, 8 FAIL, 9 SKIP
+============================================
+
+[PASS]  TABLE_EXISTS     dim_date                                       PASS
+[PASS]  TABLE_EXISTS     dim_product                                    PASS
+[PASS]  TABLE_EXISTS     dim_store                                      PASS
+[PASS]  TABLE_EXISTS     dim_customer                                   PASS
+[PASS]  TABLE_EXISTS     dim_channel                                    PASS
+[FAIL]  TABLE_EXISTS     fact_sales                                     FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_returns                                   FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_budget                                    FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_daily_inventory                           FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_order_pipeline                            FAIL -- table not present
+[FAIL]  TABLE_EXISTS     bridge_customer_segment                        FAIL -- table not present
+[FAIL]  TABLE_EXISTS     junk_order_profile                             FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_promo_exposure                            FAIL -- table not present
+[PASS]  ROW_COUNT        dim_date                                       PASS
+[PASS]  ROW_COUNT        dim_product                                    PASS
+[PASS]  ROW_COUNT        dim_store                                      PASS
+[PASS]  ROW_COUNT        dim_channel                                    PASS
+[PASS]  ROW_COUNT        dim_customer                                   PASS
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[PASS]  PK_UNIQUE        dim_date.date_key                              PASS
+[PASS]  PK_UNIQUE        dim_product.product_id                         PASS
+[PASS]  PK_UNIQUE        dim_store.store_id                             PASS
+[PASS]  PK_UNIQUE        dim_channel.channel_id                         PASS
+[PASS]  PK_UNIQUE        dim_customer.customer_key                      PASS
+[SKIP]  ERROR            Binder Error: Referenced column "is_current" not found in FROM clause!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name bridge_customer_segment does not exist!
+
+Results saved to validation/results/check_results.txt
+make: *** [Makefile:43: check] Error 1
+
+
+
