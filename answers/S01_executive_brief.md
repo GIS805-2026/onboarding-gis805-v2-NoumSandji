@@ -3,14 +3,6 @@
 ## Question du CEO
 Quelles catégories de produits déclinent,dans quelles régions, et pourquoi?
 
-## Réponse exécutive
-Les catégories **Pet Supplies, Toys & Games, Beauty & Health** performent dans presque toutes les régions mais avec une forte concentration dans les region du **Québec et Ontario**.
-
-on observe également que les catégories **Electronics, Clothings, Home & Garden** sous-performent dans les regions **BC, Estie, Alberta et Outaouais**.
-
-possiblement lié aux remises efféctuées, à la saisonnalité ou à d'autres facteurs à explorer.
-
-
 ## Décisions de modélisation
 - **Grain** : une ligne dans la table raw_fact_sales représente une vente d'un produit dans un magasin,à travers une chaîne de vente à une date donnée.
 
@@ -69,7 +61,14 @@ LIMIT 10;
 | Home & Garden | Outaouais | 1       | 123.8              | 1       |
 | Home & Garden | BC        | 1       | 152.83             | 2       |
 | Electronics   | Alberta   | 3       | 169.95999999999998 | 3       |
-```
+
+## Réponse exécutive
+Les catégories **Pet Supplies, Toys & Games, Beauty & Health** performent dans presque toutes les régions mais avec une forte concentration dans les regions du **Québec et Ontario**.
+
+on observe également que les catégories **Electronics, Clothings, Home & Garden** sous-performent dans les regions **BC, Estie, Alberta et Outaouais**.
+
+possiblement lié aux remises efféctuées, à la saisonnalité ou à d'autres facteurs à explorer.
+
 ## Validation
 - les commandes make generate, make load, make check ont été exécutées
 - les requêtes de validation ont été effectuées
