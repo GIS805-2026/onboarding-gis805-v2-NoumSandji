@@ -1,5 +1,5 @@
 # Board Brief -- S02 : Première étoile
-
+## Question du CEO
 **Question du CEO :** Quelles catégories de produits déclinent dans quelles régions, par trimestre ? et pourquoi?
 
 ## Grain statement
@@ -167,4 +167,9 @@ Les revenus les plus élevés sont concentrés au **Québec**, notamment pour **
 
 Cependant les regions  **Outaouais**, **Ontario**, **Estrie**, et **BC** montrent des déclins de revenus dans  les trimestres Q3, Q2 et Q4 pour les catégories de produits **Pet Supplies**, **Automotive**, **grocery**, **Sports & Outdoors** et **Toys & Games**
 
+## Validation
+création des tables de dimensions et de la table de fait avec des scripts .sql
+## Risques / limites
+Manque d'informations directement liées à la table de fait pour expliquer les raison du déclin
+## Prochaine recommandation
 **Recommandation :** prioriser une analyse complémentaire sur les régions BC, Estrie et Outaouais pour vérifier si la baisse est liée à la saisonnalité, aux remises, aux canaux de vente ou aux retours.
