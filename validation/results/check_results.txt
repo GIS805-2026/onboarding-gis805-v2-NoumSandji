@@ -1,5 +1,5 @@
 ============================================
-NexaMart Validation: 15 PASS, 8 FAIL, 9 SKIP
+NexaMart Validation: 23 PASS, 7 FAIL, 2 SKIP
 ============================================
 
 [PASS]  TABLE_EXISTS     dim_date                                       PASS
@@ -7,7 +7,7 @@ NexaMart Validation: 15 PASS, 8 FAIL, 9 SKIP
 [PASS]  TABLE_EXISTS     dim_store                                      PASS
 [PASS]  TABLE_EXISTS     dim_customer                                   PASS
 [PASS]  TABLE_EXISTS     dim_channel                                    PASS
-[FAIL]  TABLE_EXISTS     fact_sales                                     FAIL -- table not present
+[PASS]  TABLE_EXISTS     fact_sales                                     PASS
 [FAIL]  TABLE_EXISTS     fact_returns                                   FAIL -- table not present
 [FAIL]  TABLE_EXISTS     fact_budget                                    FAIL -- table not present
 [FAIL]  TABLE_EXISTS     fact_daily_inventory                           FAIL -- table not present
@@ -20,17 +20,17 @@ NexaMart Validation: 15 PASS, 8 FAIL, 9 SKIP
 [PASS]  ROW_COUNT        dim_store                                      PASS
 [PASS]  ROW_COUNT        dim_channel                                    PASS
 [PASS]  ROW_COUNT        dim_customer                                   PASS
-[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[PASS]  ROW_COUNT        fact_sales                                     PASS
 [PASS]  PK_UNIQUE        dim_date.date_key                              PASS
 [PASS]  PK_UNIQUE        dim_product.product_id                         PASS
 [PASS]  PK_UNIQUE        dim_store.store_id                             PASS
 [PASS]  PK_UNIQUE        dim_channel.channel_id                         PASS
 [PASS]  PK_UNIQUE        dim_customer.customer_key                      PASS
-[SKIP]  ERROR            Binder Error: Referenced column "is_current" not found in FROM clause!
-[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
-[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
-[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
-[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
-[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
-[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_sales does not exist!
+[PASS]  SCD2_ONE_CURRENT  dim_customer one is_current per customer_id    PASS
+[PASS]  FK_NOT_NULL      fact_sales.product_key                         PASS
+[PASS]  FK_NOT_NULL      fact_sales.store_key                           PASS
+[PASS]  FK_NOT_NULL      fact_sales.customer_key                        PASS
+[PASS]  FK_NOT_NULL      fact_sales.channel_key                         PASS
+[PASS]  GRAIN_UNIQUE     fact_sales (order_number, sale_line_id)        PASS
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_budget does not exist!
 [SKIP]  MISSING_TABLE    Catalog Error: Table with name bridge_customer_segment does not exist!

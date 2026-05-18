@@ -142,13 +142,14 @@ En gros, ce fichier est un modèle de ce qu’il faut produire : définition du 
 - **Justification :** je voulais comprendre ce que je dois faire
 
 - **modèle :** Codex avec chat GPT
-- **prompt :** voici mon grain : **1 ligne = 1 ligne de commande** identifiée par (order_number, sale_line_id) concernant un produit,effectuée par un client dans un magasin par un canal de vente à une date donnée. , *« Génère un diagramme Mermaid erDiagram pour mon étoile NexaMart.
+- **prompt :** "voici mon grain : **1 ligne = 1 ligne de commande** identifiée par (order_number, sale_line_id) concernant un produit,effectuée par un client dans un magasin par un canal de vente à une date donnée. , *« Génère un diagramme Mermaid erDiagram pour mon étoile NexaMart.
 > Au centre : FACT_SALES au grain « une ligne de commande »
 > (order_number + sale_line_id), avec les mesures quantity, net_price,
 > line_total, discount_pct. Cinq dimensions reliées par FK :
 > dim_date, dim_product, dim_store, dim_customer, dim_channel.
 > Inclus le bloc dans un fichier Markdown. »*"
-- **Resultat :**```mermaid
+- **Resultat :**
+```mermaid
 erDiagram
     DIM_DATE     ||--o{ FACT_SALES : "order_date"
     DIM_PRODUCT  ||--o{ FACT_SALES : "product_id"
@@ -390,5 +391,574 @@ NexaMart Validation: 15 PASS, 8 FAIL, 9 SKIP
 Results saved to validation/results/check_results.txt
 make: *** [Makefile:43: check] Error 1
 
+- **modèle :** Codex avec chat GPT
+- **prompt :** " est ce que qu'il y a une clé dans raw_fact_sale qui va nous permettre de relier la dim_promo avec fact_sales"
+- **Resultat :**Bonne question. Non, pas vraiment.
 
+Dans raw_fact_sales, les colonnes sont :
+
+sale_line_id
+order_number
+order_date
+customer_id
+product_id
+store_id
+channel_id
+quantity
+unit_price
+discount_pct
+net_price
+line_total
+Il n’y a pas de promo_id, pas de campaign_id, pas de promo_key. Donc il n’y a pas de vraie clé naturelle qui relie proprement fact_sales à une dim_promo.
+
+La seule colonne liée aux promotions est :
+
+discount_pct
+Mais discount_pct est une mesure / attribut numérique, pas une vraie clé de dimension. On pourrait techniquement créer une dim_promo à partir des valeurs distinctes de discount_pct, puis relier fact_sales.discount_pct à dim_promo.discount_pct, mais ce serait un peu artificiel.
+
+Exemple possible, mais moins propre :
+
+JOIN dim_promo p
+  ON f.discount_pct = p.discount_pct
+Pour un modèle S02 propre, je te conseille plutôt de ne pas ajouter dim_promo à fact_sales pour l’instant.
+
+Dans ton diagramme Mermaid, garde seulement :
+
+dim_date
+dim_product
+dim_store
+dim_customer
+dim_channel
+Et laisse discount_pct comme mesure non-additive dans FACT_SALES.
+
+- **Validation :** j'ai parcourru les colonnes de la table raw_fact_sales pour me rassurer qu'il n'y a pas de colonne permettant de faire une jointure avec la dimension dim_promo
+- **Justification :** je voulais me rassurer de l'existence de la relation entre les deux tables fact_sales et dim_promo
+
+**modèle :** Codex avec chat GPT
+- **prompt :** " tu lis mon fichier 02_fact_with_grain.sql, j'aimerais l'utiliser pour créer ma table de fait"
+- **Resultat :** J’ai créé ta table de fait ici : fact_sales.sql.
+Elle reprend le grain du template :
+sql
+
+
+
+-- GRAIN : one row = one order line identified by
+--         (order_number, sale_line_id)
+
+Elle construit fact_sales depuis raw_fact_sales, puis joint tes dimensions :
+dim_date → date_key
+dim_customer → customer_key
+dim_product → product_key
+dim_store → store_key
+dim_channel → channel_key
+Elle garde aussi les clés naturelles (customer_id, product_id, etc.) pour la traçabilité, et ajoute les mesures :
+quantity
+unit_price
+discount_pct
+net_price
+line_total
+gross_amount
+margin_amount
+Je l’ai testée sur une copie temporaire de la base : tout passe.
+text
+
+
+
+fact_sales_grain_unique          PASS
+fact_sales_no_null_keys          PASS
+fact_sales_reconcile_rowcount    2147 / 2147 PASS
+fact_sales_non_negative_measures PASS
+
+Tu peux maintenant lancer :
+bash
+
+
+
+make load
+make check
+
+en t’assurant d’abord que la base DuckDB n’est pas ouverte dans VS Code.
+
+- **Validation :** j'ai vérifié le fichier a été crée
+- **Justification :** pour me rassurer que le script soit sans erreur
+
+- **modèle :** Codex avec chat GPT
+- **prompt :** " est ce que qu'il y a une clé dans raw_fact_sale qui va nous permettre de relier la dim_promo avec fact_sales"
+- **Resultat :**Bonne question. Non, pas vraiment.
+
+Dans raw_fact_sales, les colonnes sont :
+
+sale_line_id
+order_number
+order_date
+customer_id
+product_id
+store_id
+channel_id
+quantity
+unit_price
+discount_pct
+net_price
+line_total
+Il n’y a pas de promo_id, pas de campaign_id, pas de promo_key. Donc il n’y a pas de vraie clé naturelle qui relie proprement fact_sales à une dim_promo.
+
+La seule colonne liée aux promotions est :
+
+discount_pct
+Mais discount_pct est une mesure / attribut numérique, pas une vraie clé de dimension. On pourrait techniquement créer une dim_promo à partir des valeurs distinctes de discount_pct, puis relier fact_sales.discount_pct à dim_promo.discount_pct, mais ce serait un peu artificiel.
+
+Exemple possible, mais moins propre :
+
+JOIN dim_promo p
+  ON f.discount_pct = p.discount_pct
+Pour un modèle S02 propre, je te conseille plutôt de ne pas ajouter dim_promo à fact_sales pour l’instant.
+
+Dans ton diagramme Mermaid, garde seulement :
+
+dim_date
+dim_product
+dim_store
+dim_customer
+dim_channel
+Et laisse discount_pct comme mesure non-additive dans FACT_SALES.
+
+- **Validation :** j'ai parcourru les colonnes de la table raw_fact_sales pour me rassurer qu'il n'y a pas de colonne permettant de faire une jointure avec la dimension dim_promo
+- **Justification :** je voulais me rassurer de l'existence de la relation entre les deux tables fact_sales et dim_promo
+
+**modèle :** Codex avec chat GPT
+- **prompt :** " tu lis mon fichier 02_fact_with_grain.sql, j'aimerais l'utiliser pour créer ma table de fait"
+- **Resultat :** J’ai créé ta table de fait ici : fact_sales.sql.
+Elle reprend le grain du template :
+sql
+
+
+
+-- GRAIN : one row = one order line identified by
+--         (order_number, sale_line_id)
+
+Elle construit fact_sales depuis raw_fact_sales, puis joint tes dimensions :
+dim_date → date_key
+dim_customer → customer_key
+dim_product → product_key
+dim_store → store_key
+dim_channel → channel_key
+Elle garde aussi les clés naturelles (customer_id, product_id, etc.) pour la traçabilité, et ajoute les mesures :
+quantity
+unit_price
+discount_pct
+net_price
+line_total
+gross_amount
+margin_amount
+Je l’ai testée sur une copie temporaire de la base : tout passe.
+text
+
+
+
+fact_sales_grain_unique          PASS
+fact_sales_no_null_keys          PASS
+fact_sales_reconcile_rowcount    2147 / 2147 PASS
+fact_sales_non_negative_measures PASS
+
+Tu peux maintenant lancer :
+bash
+
+
+
+make load
+make check
+
+en t’assurant d’abord que la base DuckDB n’est pas ouverte dans VS Code.
+
+- **Validation :** j'ai vérifié le fichier a été crée
+- **Justification :** pour me rassurer que le script soit sans erreur
+
+**modèle :** Codex avec chat GPT
+- **prompt :** "make load, make check"
+- **Resultat :**  make load
+python src/run_pipeline.py
+
+-- Loading 24 CSVs into DuckDB --
+
+  raw_fact_sales                              2,147 rows  <- data/synthetic/team_1802767793/s06/fact_sales.csv
+  raw_customer_changes                          122 rows  <- data/synthetic/team_1802767793/s03/customer_changes.csv
+  raw_store_changes                               5 rows  <- data/synthetic/team_1802767793/s03/store_changes.csv
+  raw_order_lines                             1,904 rows  <- data/synthetic/team_1802767793/s04/order_lines.csv
+  raw_orders                                    690 rows  <- data/synthetic/team_1802767793/s04/orders.csv
+  raw_fact_budget                             1,200 rows  <- data/synthetic/team_1802767793/s06/fact_budget.csv
+  raw_fact_inventory_snapshot                 5,671 rows  <- data/synthetic/team_1802767793/s06/fact_inventory_snapshot.csv
+  raw_fact_returns                              168 rows  <- data/synthetic/team_1802767793/s06/fact_returns.csv
+  raw_customer_profile_bands                    159 rows  <- data/synthetic/team_1802767793/s07/customer_profile_bands.csv
+  raw_dim_geography                              11 rows  <- data/synthetic/team_1802767793/s07/dim_geography.csv
+  raw_fact_shipment                             903 rows  <- data/synthetic/team_1802767793/s07/fact_shipment.csv
+  raw_bridge_campaign_allocation                 22 rows  <- data/synthetic/team_1802767793/s08/bridge_campaign_allocation.csv
+  raw_bridge_customer_segment                   235 rows  <- data/synthetic/team_1802767793/s08/bridge_customer_segment.csv
+  raw_customer_scd3_history                     159 rows  <- data/synthetic/team_1802767793/s08/customer_scd3_history.csv
+  raw_dim_segment_outrigger                       6 rows  <- data/synthetic/team_1802767793/s08/dim_segment_outrigger.csv
+  raw_fact_daily_inventory                    1,500 rows  <- data/synthetic/team_1802767793/s09/fact_daily_inventory.csv
+  raw_fact_order_pipeline                       712 rows  <- data/synthetic/team_1802767793/s09/fact_order_pipeline.csv
+  raw_fact_orders_transaction                 1,105 rows  <- data/synthetic/team_1802767793/s09/fact_orders_transaction.csv
+  raw_fact_promo_exposure                        75 rows  <- data/synthetic/team_1802767793/s09/fact_promo_exposure.csv
+  raw_dim_channel                                 5 rows  <- data/synthetic/team_1802767793/shared/dim_channel.csv
+  raw_dim_customer                              159 rows  <- data/synthetic/team_1802767793/shared/dim_customer.csv
+  raw_dim_date                                  731 rows  <- data/synthetic/team_1802767793/shared/dim_date.csv
+  raw_dim_product                                50 rows  <- data/synthetic/team_1802767793/shared/dim_product.csv
+  raw_dim_store                                  10 rows  <- data/synthetic/team_1802767793/shared/dim_store.csv
+  OK sql/dims/dim_channel.sql
+  OK sql/dims/dim_customer.sql
+  OK sql/dims/dim_date.sql
+  OK sql/dims/dim_product.sql
+  OK sql/dims/dim_store.sql
+  (5 file(s) from sql/dims/)
+  OK sql/facts/fact_sales.sql
+  (1 file(s) from sql/facts/)
+
+============================================================
+  30 tables in db/nexamart.duckdb
+============================================================
+  dim_channel                                     5 rows
+  dim_customer                                  159 rows
+  dim_date                                      731 rows
+  dim_product                                    50 rows
+  dim_store                                      10 rows
+  fact_sales                                  2,147 rows
+  raw_bridge_campaign_allocation                 22 rows
+  raw_bridge_customer_segment                   235 rows
+  raw_customer_changes                          122 rows
+  raw_customer_profile_bands                    159 rows
+  raw_customer_scd3_history                     159 rows
+  raw_dim_channel                                 5 rows
+  raw_dim_customer                              159 rows
+  raw_dim_date                                  731 rows
+  raw_dim_geography                              11 rows
+  raw_dim_product                                50 rows
+  raw_dim_segment_outrigger                       6 rows
+  raw_dim_store                                  10 rows
+  raw_fact_budget                             1,200 rows
+  raw_fact_daily_inventory                    1,500 rows
+  raw_fact_inventory_snapshot                 5,671 rows
+  raw_fact_order_pipeline                       712 rows
+  raw_fact_orders_transaction                 1,105 rows
+  raw_fact_promo_exposure                        75 rows
+  raw_fact_returns                              168 rows
+  raw_fact_sales                              2,147 rows
+  raw_fact_shipment                             903 rows
+  raw_order_lines                             1,904 rows
+  raw_orders                                    690 rows
+  raw_store_changes                               5 rows
+
+Done. Database: db/nexamart.duckdb
+@NoumSandji ➜ /workspaces/onboarding-gis805-v2-NoumSandji (main) $ make check
+python src/run_checks.py
+============================================
+NexaMart Validation: 22 PASS, 7 FAIL, 3 SKIP
+============================================
+
+[PASS]  TABLE_EXISTS     dim_date                                       PASS
+[PASS]  TABLE_EXISTS     dim_product                                    PASS
+[PASS]  TABLE_EXISTS     dim_store                                      PASS
+[PASS]  TABLE_EXISTS     dim_customer                                   PASS
+[PASS]  TABLE_EXISTS     dim_channel                                    PASS
+[PASS]  TABLE_EXISTS     fact_sales                                     PASS
+[FAIL]  TABLE_EXISTS     fact_returns                                   FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_budget                                    FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_daily_inventory                           FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_order_pipeline                            FAIL -- table not present
+[FAIL]  TABLE_EXISTS     bridge_customer_segment                        FAIL -- table not present
+[FAIL]  TABLE_EXISTS     junk_order_profile                             FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_promo_exposure                            FAIL -- table not present
+[PASS]  ROW_COUNT        dim_date                                       PASS
+[PASS]  ROW_COUNT        dim_product                                    PASS
+[PASS]  ROW_COUNT        dim_store                                      PASS
+[PASS]  ROW_COUNT        dim_channel                                    PASS
+[PASS]  ROW_COUNT        dim_customer                                   PASS
+[PASS]  ROW_COUNT        fact_sales                                     PASS
+[PASS]  PK_UNIQUE        dim_date.date_key                              PASS
+[PASS]  PK_UNIQUE        dim_product.product_id                         PASS
+[PASS]  PK_UNIQUE        dim_store.store_id                             PASS
+[PASS]  PK_UNIQUE        dim_channel.channel_id                         PASS
+[PASS]  PK_UNIQUE        dim_customer.customer_key                      PASS
+[SKIP]  ERROR            Binder Error: Referenced column "is_current" not found in FROM clause!
+[PASS]  FK_NOT_NULL      fact_sales.product_key                         PASS
+[PASS]  FK_NOT_NULL      fact_sales.store_key                           PASS
+[PASS]  FK_NOT_NULL      fact_sales.customer_key                        PASS
+[PASS]  FK_NOT_NULL      fact_sales.channel_key                         PASS
+[PASS]  GRAIN_UNIQUE     fact_sales (order_number, sale_line_id)        PASS
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_budget does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name bridge_customer_segment does not exist!
+
+Results saved to validation/results/check_results.txt
+make: *** [Makefile:43: check] Error 1
+
+- **Validation :** j'ai vérifié que les tables sont créées
+- **Justification :** pour me rassurer que tout soit correct
+
+**modèle :** Codex avec chat GPT
+- **prompt :** "j'ai cette erreur ERROR            Binder Error: Referenced column "is_current" not found in FROM clause!"
+- **Resultat :**  Oui, cette erreur vient de make check, pas de ta table de fait.
+Le check cherche cette colonne dans dim_customer :
+sql
+
+
+
+is_current
+
+Elle est normalement utilisée pour une dimension client historisée SCD Type 2. Comme ta dim_customer est encore une version simple S02, elle ne l’avait pas.
+J’ai corrigé dim_customer.sql en ajoutant :
+sql
+
+
+
+CAST(join_date AS DATE) AS effective_from,
+DATE '9999-12-31'       AS effective_to,
+TRUE                    AS is_current,
+
+Pour ton niveau actuel, ça veut dire : chaque client a une seule version, et elle est la version courante.
+J’ai testé le check qui échouait : il retourne maintenant PASS.
+Tu peux relancer :
+bash
+
+
+
+make load
+make check
+
+Toujours avec la base DuckDB fermée dans VS Code pour éviter l’erreur de verrou.
+- **Validation :** exécution de make load et make check
+$ make load
+python src/run_pipeline.py
+
+-- Loading 24 CSVs into DuckDB --
+
+  raw_fact_sales                              2,147 rows  <- data/synthetic/team_1802767793/s06/fact_sales.csv
+  raw_customer_changes                          122 rows  <- data/synthetic/team_1802767793/s03/customer_changes.csv
+  raw_store_changes                               5 rows  <- data/synthetic/team_1802767793/s03/store_changes.csv
+  raw_order_lines                             1,904 rows  <- data/synthetic/team_1802767793/s04/order_lines.csv
+  raw_orders                                    690 rows  <- data/synthetic/team_1802767793/s04/orders.csv
+  raw_fact_budget                             1,200 rows  <- data/synthetic/team_1802767793/s06/fact_budget.csv
+  raw_fact_inventory_snapshot                 5,671 rows  <- data/synthetic/team_1802767793/s06/fact_inventory_snapshot.csv
+  raw_fact_returns                              168 rows  <- data/synthetic/team_1802767793/s06/fact_returns.csv
+  raw_customer_profile_bands                    159 rows  <- data/synthetic/team_1802767793/s07/customer_profile_bands.csv
+  raw_dim_geography                              11 rows  <- data/synthetic/team_1802767793/s07/dim_geography.csv
+  raw_fact_shipment                             903 rows  <- data/synthetic/team_1802767793/s07/fact_shipment.csv
+  raw_bridge_campaign_allocation                 22 rows  <- data/synthetic/team_1802767793/s08/bridge_campaign_allocation.csv
+  raw_bridge_customer_segment                   235 rows  <- data/synthetic/team_1802767793/s08/bridge_customer_segment.csv
+  raw_customer_scd3_history                     159 rows  <- data/synthetic/team_1802767793/s08/customer_scd3_history.csv
+  raw_dim_segment_outrigger                       6 rows  <- data/synthetic/team_1802767793/s08/dim_segment_outrigger.csv
+  raw_fact_daily_inventory                    1,500 rows  <- data/synthetic/team_1802767793/s09/fact_daily_inventory.csv
+  raw_fact_order_pipeline                       712 rows  <- data/synthetic/team_1802767793/s09/fact_order_pipeline.csv
+  raw_fact_orders_transaction                 1,105 rows  <- data/synthetic/team_1802767793/s09/fact_orders_transaction.csv
+  raw_fact_promo_exposure                        75 rows  <- data/synthetic/team_1802767793/s09/fact_promo_exposure.csv
+  raw_dim_channel                                 5 rows  <- data/synthetic/team_1802767793/shared/dim_channel.csv
+  raw_dim_customer                              159 rows  <- data/synthetic/team_1802767793/shared/dim_customer.csv
+  raw_dim_date                                  731 rows  <- data/synthetic/team_1802767793/shared/dim_date.csv
+  raw_dim_product                                50 rows  <- data/synthetic/team_1802767793/shared/dim_product.csv
+  raw_dim_store                                  10 rows  <- data/synthetic/team_1802767793/shared/dim_store.csv
+  OK sql/dims/dim_channel.sql
+  OK sql/dims/dim_customer.sql
+  OK sql/dims/dim_date.sql
+  OK sql/dims/dim_product.sql
+  OK sql/dims/dim_store.sql
+  (5 file(s) from sql/dims/)
+  OK sql/facts/fact_sales.sql
+  (1 file(s) from sql/facts/)
+
+============================================================
+  30 tables in db/nexamart.duckdb
+============================================================
+  dim_channel                                     5 rows
+  dim_customer                                  159 rows
+  dim_date                                      731 rows
+  dim_product                                    50 rows
+  dim_store                                      10 rows
+  fact_sales                                  2,147 rows
+  raw_bridge_campaign_allocation                 22 rows
+  raw_bridge_customer_segment                   235 rows
+  raw_customer_changes                          122 rows
+  raw_customer_profile_bands                    159 rows
+  raw_customer_scd3_history                     159 rows
+  raw_dim_channel                                 5 rows
+  raw_dim_customer                              159 rows
+  raw_dim_date                                  731 rows
+  raw_dim_geography                              11 rows
+  raw_dim_product                                50 rows
+  raw_dim_segment_outrigger                       6 rows
+  raw_dim_store                                  10 rows
+  raw_fact_budget                             1,200 rows
+  raw_fact_daily_inventory                    1,500 rows
+  raw_fact_inventory_snapshot                 5,671 rows
+  raw_fact_order_pipeline                       712 rows
+  raw_fact_orders_transaction                 1,105 rows
+  raw_fact_promo_exposure                        75 rows
+  raw_fact_returns                              168 rows
+  raw_fact_sales                              2,147 rows
+  raw_fact_shipment                             903 rows
+  raw_order_lines                             1,904 rows
+  raw_orders                                    690 rows
+  raw_store_changes                               5 rows
+
+Done. Database: db/nexamart.duckdb
+@NoumSandji ➜ /workspaces/onboarding-gis805-v2-NoumSandji (main) $ make check
+python src/run_checks.py
+============================================
+NexaMart Validation: 23 PASS, 7 FAIL, 2 SKIP
+============================================
+
+[PASS]  TABLE_EXISTS     dim_date                                       PASS
+[PASS]  TABLE_EXISTS     dim_product                                    PASS
+[PASS]  TABLE_EXISTS     dim_store                                      PASS
+[PASS]  TABLE_EXISTS     dim_customer                                   PASS
+[PASS]  TABLE_EXISTS     dim_channel                                    PASS
+[PASS]  TABLE_EXISTS     fact_sales                                     PASS
+[FAIL]  TABLE_EXISTS     fact_returns                                   FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_budget                                    FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_daily_inventory                           FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_order_pipeline                            FAIL -- table not present
+[FAIL]  TABLE_EXISTS     bridge_customer_segment                        FAIL -- table not present
+[FAIL]  TABLE_EXISTS     junk_order_profile                             FAIL -- table not present
+[FAIL]  TABLE_EXISTS     fact_promo_exposure                            FAIL -- table not present
+[PASS]  ROW_COUNT        dim_date                                       PASS
+[PASS]  ROW_COUNT        dim_product                                    PASS
+[PASS]  ROW_COUNT        dim_store                                      PASS
+[PASS]  ROW_COUNT        dim_channel                                    PASS
+[PASS]  ROW_COUNT        dim_customer                                   PASS
+[PASS]  ROW_COUNT        fact_sales                                     PASS
+[PASS]  PK_UNIQUE        dim_date.date_key                              PASS
+[PASS]  PK_UNIQUE        dim_product.product_id                         PASS
+[PASS]  PK_UNIQUE        dim_store.store_id                             PASS
+[PASS]  PK_UNIQUE        dim_channel.channel_id                         PASS
+[PASS]  PK_UNIQUE        dim_customer.customer_key                      PASS
+[PASS]  SCD2_ONE_CURRENT  dim_customer one is_current per customer_id    PASS
+[PASS]  FK_NOT_NULL      fact_sales.product_key                         PASS
+[PASS]  FK_NOT_NULL      fact_sales.store_key                           PASS
+[PASS]  FK_NOT_NULL      fact_sales.customer_key                        PASS
+[PASS]  FK_NOT_NULL      fact_sales.channel_key                         PASS
+[PASS]  GRAIN_UNIQUE     fact_sales (order_number, sale_line_id)        PASS
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name fact_budget does not exist!
+[SKIP]  MISSING_TABLE    Catalog Error: Table with name bridge_customer_segment does not exist!
+
+Results saved to validation/results/check_results.txt
+make: *** [Makefile:43: check] Error 1
+- **Justification :** pour me rassurer que tout soit correct
+
+ **modèle :** Codex avec chat GPT
+- **prompt :**"## SQL preuve
+
+sql
+SELECT
+    p.category,
+    s.region,
+    d.quarter,
+    SUM(f.line_total)   AS total_revenue,
+    COUNT(*)             AS nb_lignes
+FROM fact_sales f
+JOIN dim_product  p ON f.product_id  = p.product_id
+JOIN dim_store    s ON f.store_id    = s.store_id
+JOIN dim_date     d ON f.order_date  = d.date_key
+GROUP BY p.category, s.region, d.quarter
+ORDER BY total_revenue DESC
+LIMIT 10;
+
+|    category     | region  | quarter | total_revenue | nb_lignes |
+|-----------------|---------|--------:|--------------:|----------:|
+| Pet Supplies    | Québec  | 4       | 10982.23      | 28        |
+| Pet Supplies    | Québec  | 2       | 8361.67       | 21        |
+| Automotive      | Québec  | 4       | 7772.03       | 22        |
+| Pet Supplies    | Québec  | 3       | 7753.10       | 18        |
+| Beauty & Health | Québec  | 2       | 7478.66       | 27        |
+| Toys & Games    | Québec  | 4       | 7374.96       | 25        |
+| Pet Supplies    | Québec  | 1       | 7162.66       | 18        |
+| Books & Media   | Québec  | 2       | 6536.74       | 23        |
+| Pet Supplies    | Ontario | 3       | 6518.95       | 18        |
+| Books & Media   | Québec  | 4       | 6137.86       | 20        |
+
+sql
+SELECT
+    p.category,
+    s.region,
+    d.quarter,
+    SUM(f.line_total)   AS total_revenue,
+    COUNT(*)             AS nb_lignes
+FROM fact_sales f
+JOIN dim_product  p ON f.product_id  = p.product_id
+JOIN dim_store    s ON f.store_id    = s.store_id
+JOIN dim_date     d ON f.order_date  = d.date_key
+GROUP BY p.category, s.region, d.quarter
+ORDER BY total_revenue ASC
+LIMIT 10;
+
+|   category    |  region   | quarter | total_revenue | nb_lignes |
+|---------------|-----------|--------:|--------------:|----------:|
+| Electronics   | BC        | 1       | 34.26         | 2         |
+| Home & Garden | Alberta   | 2       | 41.22         | 1         |
+| Electronics   | Alberta   | 2       | 81.52         | 2         |
+| Electronics   | BC        | 2       | 112.35        | 2         |
+| Electronics   | Outaouais | 1       | 116.90        | 2         |
+| Electronics   | Outaouais | 4       | 121.53        | 2         |
+| Home & Garden | Alberta   | 1       | 123.80        | 1         |
+| Home & Garden | Outaouais | 1       | 123.80        | 1         |
+| Home & Garden | BC        | 1       | 152.83        | 2         |
+| Electronics   | Alberta   | 3       | 169.96        | 3         |
+
+## Réponse au CEO
+
+Les catégories **Pet Supplies, Toys & Games, Beauty & Health** performent dans presque toutes les régions mais avec une forte concentration dans les regions du **Québec et Ontario** au Q4 et Q3.
+
+on observe également que les catégories **Electronics, Clothings, Home & Garden** sous-performent dans les regions **BC, Estie, Alberta et Outaouais** principalement au Q1 et Q2.
+
+possiblement lié aux remises efféctuées, à la saisonnalité ou à d'autres facteurs à explorer.
+
+**Recommandation :** Investiguer d'autres facteurs comme les chaines de ventes, la gestion des retours
+
+voilà un peu comment j'ai répondu à la question du CEO"
+- **Resultat :**
+Oui, ta réponse est dans la bonne direction, mais je corrigerais deux points importants.
+
+D’abord, comme ta nouvelle fact_sales utilise des clés substituts, ta requête devrait plutôt joindre comme ça :
+
+JOIN dim_product p ON f.product_key = p.product_key
+JOIN dim_store   s ON f.store_key   = s.store_key
+JOIN dim_date    d ON f.date_key    = d.date_key
+Ensuite, la question du CEO parle de catégories qui déclinent. Tes deux requêtes montrent les meilleurs et les plus faibles revenus, mais elles ne mesurent pas vraiment une baisse entre trimestres. Une petite catégorie avec peu de lignes peut apparaître en bas sans être forcément “en déclin”.
+
+Pour être plus solide, tu peux ajouter une requête avec comparaison trimestre précédent :
+
+WITH revenue_by_quarter AS (
+    SELECT
+        p.category,
+        s.region,
+        d.quarter,
+        SUM(f.line_total) AS total_revenue
+    FROM fact_sales f
+    JOIN dim_product p ON f.product_key = p.product_key
+    JOIN dim_store   s ON f.store_key   = s.store_key
+    JOIN dim_date    d ON f.date_key    = d.date_key
+    GROUP BY p.category, s.region, d.quarter
+),
+with_previous AS (
+    SELECT
+        category,
+        region,
+        quarter,
+        total_revenue,
+        LAG(total_revenue) OVER (
+            PARTITION BY category, region
+            ORDER BY quarter
+        ) AS previous_revenue
+    FROM revenue_by_quarter
+)
+SELECT
+    category,
+    region,
+    quarter,
+    previous_revenue,
+    total_revenue,
+    total_revenue - previous_revenue AS revenue_change
+FROM with_previous
+WHERE previous_revenue IS NOT NULL
+ORDER BY revenue_change ASC
+LIMIT 10;
+
+- **Validation :** j'ai comparé avec celui attendu
+- **Justification :** je voulais me rassurer d'avoir les bons résultats sur lesquels fondés mon analyse
 

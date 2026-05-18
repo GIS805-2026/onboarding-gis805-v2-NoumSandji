@@ -18,6 +18,9 @@ SELECT
     province,
     loyalty_segment,
     CAST(join_date AS DATE)                  AS join_date,
+    CAST(join_date AS DATE)                  AS effective_from,
+    DATE '9999-12-31'                        AS effective_to,
+    TRUE                                     AS is_current,
     CURRENT_DATE                             AS loaded_at
 FROM raw_dim_customer
 WHERE customer_id IS NOT NULL;
