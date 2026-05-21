@@ -1,6 +1,6 @@
 # Rétroaction automatisée -- S02 (Première étoile -- schéma en étoile, grain et dimensions conformes)
 
-_Générée le 2026-05-21T17:44:34+00:00 -- Run `20260521T173854Z-8262142b`_
+_Générée le 2026-05-21T20:44:30+00:00 -- Run `20260521T204029Z-63dae822`_
 
 Ce document est produit par un pipeline reproductible (vérification SQL déterministe + analyse LLM du brief et de la déclaration IA). Une revue humaine précède toujours sa publication. **À ce stade expérimental, aucune note ni étiquette de niveau n'est diffusée : l'objectif est purement formatif.**
 
@@ -21,7 +21,7 @@ Vous pouvez relancer le grader local (`tools/grader/grade_brief.py`) pour obteni
 
 ## 3. Déclaration d'utilisation de l'IA
 
-> La déclaration documente l'outil utilisé et les étapes où l'IA a aidé, ainsi que des méthodes concrètes de validation humaine. Cependant elle ne mentionne pas les limites ou erreurs observées et le nom de l'outil est donné sans version/modèle précis.
+> La déclaration documente clairement les interactions (prompts, étapes et validations manuelles). En revanche elle ne signale pas de limites ou d'erreurs observées et n'indique pas de version/modèle précise pour l'outil.
 
 **Sujets bien couverts dans votre déclaration :**
 
@@ -42,11 +42,11 @@ Vous pouvez relancer le grader local (`tools/grader/grade_brief.py`) pour obteni
 
 ## 5. Traçabilité
 
-- **Run ID :** `20260521T173854Z-8262142b`
+- **Run ID :** `20260521T204029Z-63dae822`
 - **Devoir :** `S02`
 - **Étudiant·e :** `NoumSandji`
 - **Commit analysé :** `e57d5b8`
-- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260521T173854Z-8262142b/NoumSandji/`
+- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260521T204029Z-63dae822/NoumSandji/`
 - **Prompts (SHA-256) :**
   - `ai_usage_grader_system` : `81cb7fdf89bda55a...`
   - `rubric_grader_system` : `505f32d1d8319d66...`
