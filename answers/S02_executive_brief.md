@@ -62,7 +62,7 @@ erDiagram
         string channel_name
     }
 ```
-
+## Décisions de modélisation
 - **5 dimensions conformes** reliées par FK à `fact_sales` :dim_date,dim_product, dim_store, dim_channel,dim_customer
 - Mesures : `quantity` (additive), `net_price` (additive), `line_total` (additive), `discount_pct` (non-additive -> moyenne pondérée)
 
@@ -161,7 +161,7 @@ LIMIT 10;
 | Beauty & Health   | Ontario   | 4       | 5539.01          | 3729.82       | -1809.19       |
 | Toys & Games      | Outaouais | 4       | 2700.90          | 979.88        | -1721.02       |
 
-## Réponse au CEO
+## Réponse exécutive
 
 Les revenus les plus élevés sont concentrés au **Québec**, notamment pour **Pet Supplies**, **Automotive**, **Beauty & Health** et **Toys & Games**. L’Ontario apparaît aussi dans les meilleures combinaisons, mais de façon moins dominante.
 
