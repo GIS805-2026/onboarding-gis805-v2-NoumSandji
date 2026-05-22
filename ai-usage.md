@@ -101,7 +101,7 @@ LIMIT 10;
 
 
 ### 2026-05-17 - séance S02
-- **modèle :** Codex avec chat GPT
+- **modèle :** Codex basé sur GPT-5
 - **prompt :**  "tu peux m'expliquer le fichier s02-sample-brief.md"
 - **Resultat :** Oui. Ce fichier docs/s02-sample-brief.md est un exemple annoté du brief attendu pour la séance S02. Ce n’est pas le fichier à rendre : ton vrai livrable est indiqué au début, dans answers/S02_executive_brief.md.
 Le but du brief est de répondre à la question du CEO :
@@ -207,7 +207,7 @@ erDiagram
 - **Validation :** j'ai comparé avec celui attendu
 - **Justification :** je voulais me rassurer que mon modèle soit cohérent
 
-- **modèle :** Codex avec chat GPT
+- **modèle :** Codex basé sur GPT-5
 - **prompt :** "tu vois mon fichier 01_dimfrom_raw.sql? j'aimerais que tu me crées et adaptes ces fichiers pour chacune de ces dimensions : dim_product, dim_customer, dim_store, dim_date,
 dim_channel dans le repertoire dims"
 - **Resultat :**C’est fait. J’ai créé les 5 fichiers dans sql/dims :
@@ -222,7 +222,7 @@ J’ai aussi testé les 5 scripts sur une copie temporaire de ta base DuckDB : t
 - **Validation :** j'ai parcourru les répertoires listés pour avoir les mêmes informations fournies par l'agent
 - **Justification :** je voulais me rassurer que les fichiers soient créés sans erreurs
 
-- **modèle :** Codex avec chat GPT
+- **modèle :** Codex basé sur GPT-5
 - **prompt :** " j'ai une question, est ce que CURRENT_DATE                            AS loaded_at est nécessaire pour toute les tables?"
 - **Resultat :** Non, ce n’est pas strictement nécessaire pour toutes les tables.
 
@@ -235,7 +235,7 @@ Mais côté modèle métier, elle n’est pas indispensable. Les dimensions pour
 - **Validation :** pas de validation
 - **Justification :** juste pour me rassurer de la necessité de  cette colonne ou champ dans toutesles dimensions
 
-- **modèle :** Codex avec chat GPT
+- **modèle :** Codex basé sur GPT-5
 - **prompt :** " make load"
 - **Resultat :** python src/run_pipeline.py
 
@@ -391,7 +391,7 @@ NexaMart Validation: 15 PASS, 8 FAIL, 9 SKIP
 Results saved to validation/results/check_results.txt
 make: *** [Makefile:43: check] Error 1
 
-- **modèle :** Codex avec chat GPT
+- **modèle :** Codex basé sur GPT-5
 - **prompt :** " est ce que qu'il y a une clé dans raw_fact_sale qui va nous permettre de relier la dim_promo avec fact_sales"
 - **Resultat :**Bonne question. Non, pas vraiment.
 
@@ -434,7 +434,7 @@ Et laisse discount_pct comme mesure non-additive dans FACT_SALES.
 - **Validation :** j'ai parcourru les colonnes de la table raw_fact_sales pour me rassurer qu'il n'y a pas de colonne permettant de faire une jointure avec la dimension dim_promo
 - **Justification :** je voulais me rassurer de l'existence de la relation entre les deux tables fact_sales et dim_promo
 
-**modèle :** Codex avec chat GPT
+**modèle :** Codex basé sur GPT-5
 - **prompt :** " tu lis mon fichier 02_fact_with_grain.sql, j'aimerais l'utiliser pour créer ma table de fait"
 - **Resultat :** J’ai créé ta table de fait ici : fact_sales.sql.
 Elle reprend le grain du template :
@@ -482,7 +482,7 @@ en t’assurant d’abord que la base DuckDB n’est pas ouverte dans VS Code.
 - **Validation :** j'ai vérifié le fichier a été crée
 - **Justification :** pour me rassurer que le script soit sans erreur
 
-- **modèle :** Codex avec chat GPT
+- **modèle :** Codex basé sur GPT-5
 - **prompt :** " est ce que qu'il y a une clé dans raw_fact_sale qui va nous permettre de relier la dim_promo avec fact_sales"
 - **Resultat :**Bonne question. Non, pas vraiment.
 
@@ -525,7 +525,7 @@ Et laisse discount_pct comme mesure non-additive dans FACT_SALES.
 - **Validation :** j'ai parcourru les colonnes de la table raw_fact_sales pour me rassurer qu'il n'y a pas de colonne permettant de faire une jointure avec la dimension dim_promo
 - **Justification :** je voulais me rassurer de l'existence de la relation entre les deux tables fact_sales et dim_promo
 
-**modèle :** Codex avec chat GPT
+**modèle :** Codex basé sur GPT-5
 - **prompt :** " tu lis mon fichier 02_fact_with_grain.sql, j'aimerais l'utiliser pour créer ma table de fait"
 - **Resultat :** J’ai créé ta table de fait ici : fact_sales.sql.
 Elle reprend le grain du template :
@@ -573,7 +573,7 @@ en t’assurant d’abord que la base DuckDB n’est pas ouverte dans VS Code.
 - **Validation :** j'ai vérifié le fichier a été crée
 - **Justification :** pour me rassurer que le script soit sans erreur
 
-**modèle :** Codex avec chat GPT
+**modèle :** Codex basé sur GPT-5
 - **prompt :** "make load, make check"
 - **Resultat :**  make load
 python src/run_pipeline.py
@@ -693,7 +693,7 @@ make: *** [Makefile:43: check] Error 1
 - **Validation :** j'ai vérifié que les tables sont créées
 - **Justification :** pour me rassurer que tout soit correct
 
-**modèle :** Codex avec chat GPT
+**modèle :** Codex basé sur GPT-5
 - **prompt :** "j'ai cette erreur ERROR            Binder Error: Referenced column "is_current" not found in FROM clause!"
 - **Resultat :**  Oui, cette erreur vient de make check, pas de ta table de fait.
 Le check cherche cette colonne dans dim_customer :
@@ -841,7 +841,7 @@ Results saved to validation/results/check_results.txt
 make: *** [Makefile:43: check] Error 1
 - **Justification :** pour me rassurer que tout soit correct
 
- **modèle :** Codex avec chat GPT
+ **modèle :** Codex basé sur GPT-5
 - **prompt :**"## SQL preuve
 
 sql
