@@ -962,3 +962,100 @@ LIMIT 10;
 - **Validation :** j'ai comparé avec celui attendu
 - **Justification :** je voulais me rassurer d'avoir les bons résultats sur lesquels fondés mon analyse
 
+### 2026-05-22 - séance S03
+
+**modèle :** Codex basé sur GPT-5
+- **prompt :** "comment lancer les implémentation?"
+- **Resultat :** make generate
+make load
+make check
+make generate
+- **Validation :**
+  dim_channel                                     5 rows
+  dim_customer                                  159 rows
+  dim_date                                      731 rows
+  dim_product                                    50 rows
+  dim_store                                      10 rows
+  fact_sales                                  2,147 rows
+
+ ```sql
+ select count(*) from dim_channel;
+ ```
+| count_star() |
+|-------------:|
+| 5            |
+ ```sql
+select count(*) from dim_customer;
+ ```
+| count_star() |
+|-------------:|
+| 159          |
+ ```sql
+select count(*) from dim_date;
+ ```
+| count_star() |
+|-------------:|
+| 731          |
+ ```sql
+select count(*) from dim_product;
+ ```
+| count_star() |
+|-------------:|
+| 50           |
+  ```sql
+select count(*) from dim_store;
+ ```
+| count_star() |
+|-------------:|
+| 10           |
+```sql
+select count(*) from fact_sales;
+ ```
+| count_star() |
+|-------------:|
+| 2147         |
+
+- **Justification :** je voulais me rassurer que la base soit correcte
+
+
+**modèle :** Codex basé sur GPT-5
+- **prompt :** "puisque dans le sprint 1 on nous recommande de faire au moins deux commits"
+- **Resultat :** Oui, exactement. Pour le Sprint 1, le prof recommande au moins deux commits parce qu’il veut voir ta progression, pas seulement le résultat final.
+
+Je te propose cette séquence :
+
+Commit 1 — Type 1 trompeur
+
+Après avoir écrit et testé :
+
+le rapport de référence;
+les colonnes SCD ajoutées à dim_store;
+la simulation Type 1 avec UPDATE;
+le rapport montrant que Outaouais disparaît ou est absorbé par Québec.
+Tu fais :
+
+git add sql/scd/type1_vs_type2_demo.sql
+git commit -m "S03 type 1 misleading report"
+Commit 2 — Type 2 correct
+
+Après avoir ajouté et testé :
+
+l’insertion de la nouvelle version Québec;
+l’expiration de l’ancienne version Outaouais;
+le rapport montrant que les ventes historiques restent correctement attribuées.
+Tu fais :
+
+git add sql/scd/type1_vs_type2_demo.sql
+git commit -m "S03 type 2 preserves history"
+Ensuite, pour le reste du travail, tu peux faire un troisième commit :
+
+git add answers/S03_executive_brief.md docs/scd-policy.md ai-usage.md
+git commit -m "S03 document SCD policy and executive brief"
+Donc la trace idéale serait :
+
+1. S03 type 1 misleading report
+2. S03 type 2 preserves history
+3. S03 document SCD policy and exec
+- **Validation :**
+j'ai vérifié avec la recommandation faite dans le cours, j'ai suivi les étapes proposées et exécuté les commandes
+- **Justification :** je voulais me rassurer de la démarche à suivre
