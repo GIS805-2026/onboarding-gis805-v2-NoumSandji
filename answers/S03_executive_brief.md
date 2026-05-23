@@ -226,20 +226,54 @@ Avec le Type 2, les ventes historiques restent associées à Outaouais parce que
 `fact_sales` conserve la clé substitut de l’ancienne version du magasin. La
 nouvelle version Québec existe pour représenter le magasin à partir du
 `2026-03-01`.
+## Validation
 
-## KPI de risque
+La validation a été faite en deux exécutions séparées, car le Type 1 modifie
+directement `dim_store`. Après le test Type 1, la base a été réinitialisée avec
+`make reset && make load` avant de tester le Type 2.
 
-Le Type 1 aurait réattribué environ `48 096$` de ventes et `24 232 $` de marge de
-la région Outaouais vers Québec.
+Commandes utilisées :
 
-Cela représente `50.38 %` des ventes régionales analysées.
+```bash
+make reset
+make load
+make check
+duckdb db/nexamart.duckdb -cmd ".headers on" -cmd ".mode markdown" < sql/scd/type1_vs_type2_demo.sql
+```
 
-## Risques /limites
+Trois contrôles ont été effectués :
 
-Avec le Type 2, le CEO peut comparer correctement la performance d’Outaouais
-avant la fusion avec celle de Québec après la fusion. Cette distinction évite
-de conclure à tort que Québec performait mieux historiquement, alors qu’une
-partie du revenu venait d’une région différente.
+1. **Réconciliation du total des ventes.** Le total global reste identique
+   avant et après simulation : environ `474 182,96 $`. Le Type 1 ne change donc
+   pas le total de l'entreprise; il change seulement l'attribution régionale.
+
+2. **Réconciliation de la marge.** La marge globale reste aussi identique :
+   environ `226 314,04 $`. Le risque du Type 1 est donc une mauvaise lecture
+   régionale, pas une perte de transactions.
+
+3. **Vérification SCD Type 2.** Après le Type 2, le magasin `STR-004`
+   (`NexaMart Gatineau`) possède deux versions : l'ancienne en `Outaouais`
+   fermée au `2026-02-28`, et la nouvelle en `Québec` active à partir du
+   `2026-03-01`. Une seule version reste courante avec `is_current = true`.
+
+Ces contrôles confirment que le Type 1 réattribue les ventes historiques
+d'Outaouais à Québec, tandis que le Type 2 conserve la vérité historique sans
+modifier le total global des ventes ni de la marge.
+
+## Risques / limites
+
+Le Type 1 aurait réattribué environ `48 096,60 $` de ventes et `24 232,46 $`
+de marge de la région Outaouais vers Québec. La marge de cette région est de
+`50,38 %`, ce qui montre que le Type 1 ne déplace pas seulement du revenu :
+il mélange aussi deux profils de rentabilité régionale.
+
+Cette analyse couvre seulement le changement de région dans `dim_store`. Elle
+ne teste pas encore les autres dimensions qui peuvent aussi nécessiter une
+politique SCD, comme `dim_customer.loyalty_segment` ou `dim_product.category`.
+
+La marge utilisée est une marge brute calculée à partir de `net_price`,
+`unit_cost` et `quantity`. Elle ne couvre pas toutes les dépenses
+opérationnelles, comme le loyer, les salaires, le transport ou le marketing.
 
 ## Politique SCD recommandée
 
