@@ -1,6 +1,6 @@
 # Rétroaction automatisée -- S03 (Dimensions à changement lent : garder la vérité historique chez NexaMart)
 
-_Générée le 2026-05-25T22:09:51+00:00 -- Run `20260525T220643Z-3ddee3eb`_
+_Générée le 2026-05-26T01:06:19+00:00 -- Run `20260526T010307Z-64bc65ed`_
 
 Ce document est produit par un pipeline reproductible (vérification SQL déterministe + analyse LLM du brief et de la déclaration IA). Une revue humaine précède toujours sa publication. **À ce stade expérimental, aucune note ni étiquette de niveau n'est diffusée : l'objectif est purement formatif.**
 
@@ -38,33 +38,33 @@ ORDER BY total_sales DESC;
 
 ## 2. Rétroaction pédagogique sur le brief
 
-> Le brief répond bien à la question CEO : grain et choix SCD pour dim_store sont explicités et des validations SQL sont fournies. Pour atteindre l'excellence, ajoutez des résultats chiffrés explicites, un historique de commits et des instructions de reproduction claires.
+> Brief clair et orienté business : la recommandation SCD2 pour la région est bien justifiée et la validation montre une méthode reproductible. Améliorer la traçabilité (commits git, note IA) et fournir résultats non redacted pour renforcer la validation et la confiance du board.
 
 ### Observations par dimension
 
 **Model quality**
-- Observation : Le brief énonce clairement le grain (ligne de commande), les mesures (line_total, margin_amount) et recommande SCD Type 2 pour dim_store.region.
-- Piste d'amélioration : Préciser et justifier le pattern SCD choisi (colonnes effective_from/effective_to/version, gestion des fusions/role-playing) et montrer le DDL final du modèle produit.
+- Observation : Le brief précise le grain (ligne de commande), les mesures (line_total, margin_amount) et recommande SCD Type 2 pour dim_store.region.
+- Piste d'amélioration : Préciser le pattern exact appliqué (ex. clé substitut, surrogate key) et montrer l'usage de version_num/effective_from dans un schéma synthétique pour lever toute ambiguïté structurelle.
 
 **Validation quality**
-- Observation : Le document inclut les requêtes SQL avant/après et mentionne l'exécution via make reset && make load et duckdb pour reproduire les tests.
-- Piste d'amélioration : Ajouter des résultats chiffrés comparant avant/après (écart $ et %), et documenter le traitement des cas limites (NULLs, transactions hors plage, clés orphelines).
+- Observation : L'auteur fournit les requêtes SQL pour les rapports avant/après et décrit le reset de la base entre tests (make reset && make load).
+- Piste d'amélioration : Inclure un extrait d'une exécution réelle (résultats non redacted) et ajouter des checks de cas limites (NULLs, SUM = 0, vérification du mapping store_key) pour renforcer la validation.
 
 **Executive justification**
-- Observation : La section 'Réponse exécutive' dit que les changements influençant les rapports de performance doivent être historisés et recommande de Type 2 pour la région, avec une justification métier concise.
-- Piste d'amélioration : Formuler une recommandation décisionnelle plus directe pour le CA (ex. approbation explicite + impact attendu en $/%), en langage d'affaires et avec un court résumé chiffré.
+- Observation : La réponse exécutive dit clairement que les changements impactant la performance doivent être historisés et recommande SCD2 pour la région, avec une justification business lisible.
+- Piste d'amélioration : Ajouter un court chiffre-clé ou pourcentage attendu d'impact (ex. écart régional estimé) pour rendre la décision encore plus actionnable pour le conseil.
 
 **Process trace**
-- Observation : La validation mentionne l'usage de make reset/make load et une réinitialisation entre tests, mais il n'y a aucune trace de commits git ni de note IA/usage d'outils.
-- Piste d'amélioration : Inclure l'historique git (≥3 commits) avec messages, et une note IA précisant outil/usage et qui a validé manuellement les changements.
+- Observation : La section Validation liste les commandes exécutées mais il n'y a pas d'historique git ni de note IA détaillée.
+- Piste d'amélioration : Ajouter un log de commits git (≥3 commits) avec messages descriptifs et une brève note IA indiquant l'outil utilisé et la validation humaine effectuée.
 
 **Reproducibility**
-- Observation : Les commandes d'exécution (duckdb db/nexamart.duckdb, make reset) sont fournies mais utilisent des chemins/artefacts qui peuvent être codés en dur.
-- Piste d'amélioration : Fournir un README pas-à-pas montrant clone → commande unique pour reproduire (sans chemins codés en dur) et inclure un script check automatisé.
+- Observation : Le brief fournit les commandes make et la commande duckdb pour reproduire les tests (make reset; make load; duckdb ...).
+- Piste d'amélioration : Documenter dans le README les chemins attendus et tout paramètre à ajuster (chemin vers db/, variables d'environnement) pour une reproduction sans ambiguïté.
 
 ## 3. Déclaration d'utilisation de l'IA
 
-> La déclaration couvre bien les quatre sujets requis : outils utilisés, étapes d'usage, validations humaines et erreurs observées. Cependant certaines mentions d'outils restent un peu vagues (ex. Copilot sans version précise), ce qui rend la déclaration partiellement générique.
+> La déclaration couvre bien les quatre thèmes demandés : outils, étapes d'utilisation, validation humaine et limites observées. Toutefois, certaines mentions d'outils restent génériques (par ex. "GitHub Copilot chat" sans version précise), ce qui empêche d'attribuer la note maximale.
 
 **Sujets bien couverts dans votre déclaration :**
 
@@ -81,11 +81,11 @@ ORDER BY total_sales DESC;
 
 ## 5. Traçabilité
 
-- **Run ID :** `20260525T220643Z-3ddee3eb`
+- **Run ID :** `20260526T010307Z-64bc65ed`
 - **Devoir :** `S03`
 - **Étudiant·e :** `NoumSandji`
 - **Commit analysé :** `82d5be3`
-- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260525T220643Z-3ddee3eb/NoumSandji/`
+- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260526T010307Z-64bc65ed/NoumSandji/`
 - **Prompts (SHA-256) :**
   - `rubric_grader_system` : `505f32d1d8319d66...`
   - `ai_usage_grader_system` : `81cb7fdf89bda55a...`
