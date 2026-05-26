@@ -1,6 +1,6 @@
 # Rétroaction automatisée -- S03 (Dimensions à changement lent : garder la vérité historique chez NexaMart)
 
-_Générée le 2026-05-26T01:47:12+00:00 -- Run `20260526T014406Z-11c1baa8`_
+_Générée le 2026-05-26T01:52:02+00:00 -- Run `20260526T014859Z-8caeb97f`_
 
 Ce document est produit par un pipeline reproductible (vérification SQL déterministe + analyse LLM du brief et de la déclaration IA). Une revue humaine précède toujours sa publication. **À ce stade expérimental, aucune note ni étiquette de niveau n'est diffusée : l'objectif est purement formatif.**
 
@@ -12,38 +12,50 @@ Ce document est produit par un pipeline reproductible (vérification SQL déterm
 
 La requête extraite de votre brief n'a pas pu être validée automatiquement. Quelques pistes constructives ci-dessous pour vous aider à la rendre exécutable et alignee avec la question posée.
 
-_Observation technique : aucun SELECT trouvé dans sql/scd/type1_vs_type2_demo.sql_
+_Observation technique : erreur d'exécution SQL: Catalog Error: Table with name scd_region_report_impact does not exist!_
 
+<details><summary>Requête analysée — cliquez pour déplier</summary>
+
+```sql
+SELECT * FROM scd_region_report_impact LIMIT 100
+```
+
+</details>
+
+
+**Pistes :**
+> Tables référencées dans votre requête mais absentes de la base : `scd_region_report_impact`.
+> Tables disponibles dans `db/nexamart.duckdb` : `dim_channel`, `dim_customer`, `dim_date`, `dim_product`, `dim_store`, `fact_sales`, `raw_bridge_campaign_allocation`, `raw_bridge_customer_segment`, `raw_customer_changes`, `raw_customer_profile_bands`, `raw_customer_scd3_history`, `raw_dim_channel`, `raw_dim_customer`, `raw_dim_date`, `raw_dim_geography`, `raw_dim_product`, `raw_dim_segment_outrigger`, `raw_dim_store`, `raw_fact_budget`, `raw_fact_daily_inventory`.
 
 ## 2. Rétroaction pédagogique sur le brief
 
-> Le brief est solide : grain et mesures sont explicites, la recommandation SCD2 pour la région est claire et la validation SQL et les réconciliations sont convaincantes. Améliorez la traçabilité (commits git, note IA) et fournissez un schéma et tests automatiques pour rendre la solution entièrement reproductible en production.
+> Le brief répond clairement à la question CEO et fournit une validation reproductible montrant que SCD Type 2 préserve la vérité historique pour la région du magasin. Pour atteindre l'excellence totale, ajoutez la traçabilité git/IA, formalisez quelques contrôles d'angles morts et condensez la justification exécutive en une recommandation chiffrée.
 
 ### Observations par dimension
 
 **Model quality**
-- Observation : Le brief précise le grain (ligne de commande), les mesures (`line_total`, `margin_amount`) et recommande SCD Type 2 pour `dim_store.region` avec justification business.
-- Piste d'amélioration : Précisez la gestion des clés substituts (store_key) et montrez un diagramme simple du schéma fact/dim pour éliminer toute ambiguïté structurelle.
+- Observation : Le brief précise le grain (order_number, sale_line_id), liste les mesures (line_total, margin_amount) et recommande SCD Type 2 pour dim_store.region en justifiant par l'exemple de Gatineau.
+- Piste d'amélioration : Préciser les colonnes SCD (effective_from/effective_to/is_current/version_num) et montrer la jointure temporelle exacte utilisée pour relier fact_sales à la bonne version de dim_store.
 
 **Validation quality**
-- Observation : Le candidat fournit les requêtes SQL utilisées, la commande de test (`make reset && make load`) et trois contrôles de réconciliation (total ventes, marge, versions SCD2).
-- Piste d'amélioration : Ajoutez un test automatique qui vérifie explicitement les cas limites (p. ex. division par zéro, NULLs sur dates d'effet) et capture les sorties numériques clés dans un fichier de preuve.
+- Observation : La section Validation décrit l'exécution séparée des tests Type 1 et Type 2, l'usage de make reset && make load et trois contrôles de réconciliation (ventes totales, marge, versions du magasin).
+- Piste d'amélioration : Ajouter des contrôles d'angles morts (dates qui se chevauchent, doublons de is_current, gestion des NULL) et un test automatisé qui valide l'absence de périodes qui se chevauchent.
 
 **Executive justification**
-- Observation : La réponse exécutive dit clairement que «les changements qui influencent les rapports de performance doivent garder leur historique» et recommande SCD2 pour la région avec une action décisionnelle claire.
-- Piste d'amélioration : Résumez en une ligne chiffrée l'impact attendu (ex. montant approximatif réattribué) pour renforcer l'urgence de la décision.
+- Observation : La réponse exécutive dit clairement que les attributs influençant les rapports de performance doivent être historisés et recommande explicitement Type 2 pour region, avec une recommandation business finale.
+- Piste d'amélioration : Raccourcir et formuler la justification en 150–300 mots sur un ton board-level et inclure un impact quantifié (ex. $ ou % d'attribution régionale) si possible.
 
 **Process trace**
-- Observation : La validation mentionne les commandes utilisées (`make reset`, `make load`, `duckdb ...`) mais n'inclut pas d'historique git ni de note IA ou log de décision détaillé.
-- Piste d'amélioration : Ajoutez un petit historique git (≥3 commits) avec messages significatifs et une note IA précisant l'outil et la validation humaine réalisée.
+- Observation : Le brief liste les commandes utilisées (make reset, make load, duckdb) mais n'inclut pas d'historique git ni de note IA/validation humaine détaillée.
+- Piste d'amélioration : Ajouter un log de commits git (≥3 commits) avec messages explicites et une note IA précisant l'outil utilisé et la validation humaine effectuée.
 
 **Reproducibility**
-- Observation : Le brief indique les commandes reproductibles (`make reset && make load` et l'exécution DuckDB) permettant de relancer les tests.
-- Piste d'amélioration : Documentez explicitement les chemins relatifs attendus et ajoutez un script `check.sh` qui exécute toutes les validations et produit un rapport numérique.
+- Observation : Le dossier indique les commandes exactes (make reset, make load, duckdb ...) permettant de reproduire les tests sur la base fournie.
+- Piste d'amélioration : Retirer les chemins codés en dur et inclure un README pas-à-pas avec les versions d'outil et les fichiers attendus pour garantir une exécution sur un clone propre.
 
 ## 3. Déclaration d'utilisation de l'IA
 
-> La déclaration est complète : elle nomme les outils/modèles, précise les étapes d'utilisation, décrit les validations humaines et signale des erreurs concrètes. Bon travail de traçage et de preuve (ex. sorties de make load/check) — rien d'évidemment générique ou manquant.
+> La déclaration documente clairement les interactions (outil + prompt), les étapes d'utilisation et les vérifications humaines exécutées. Toutefois, quelques mentions d'outils restent génériques (p.ex. Copilot sans version précise), ce qui empêche une preuve totalement complète selon les critères.
 
 **Sujets bien couverts dans votre déclaration :**
 
@@ -60,11 +72,11 @@ _Observation technique : aucun SELECT trouvé dans sql/scd/type1_vs_type2_demo.s
 
 ## 5. Traçabilité
 
-- **Run ID :** `20260526T014406Z-11c1baa8`
+- **Run ID :** `20260526T014859Z-8caeb97f`
 - **Devoir :** `S03`
 - **Étudiant·e :** `NoumSandji`
 - **Commit analysé :** `82d5be3`
-- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260526T014406Z-11c1baa8/NoumSandji/`
+- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260526T014859Z-8caeb97f/NoumSandji/`
 - **Prompts (SHA-256) :**
   - `rubric_grader_system` : `505f32d1d8319d66...`
   - `ai_usage_grader_system` : `81cb7fdf89bda55a...`
