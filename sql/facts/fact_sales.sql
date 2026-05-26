@@ -5,7 +5,8 @@
 --         (order_number, sale_line_id).
 --
 -- Degenerate dimension: order_number.
--- Foreign keys: date_key, customer_key, product_key, store_key, channel_key.
+-- Foreign keys: date_key, customer_key, product_key, store_key, channel_key,
+--               order_profile_key.
 -- Measures: quantity, unit_price, discount_pct, net_price, line_total,
 --           gross_amount, margin_amount.
 -- ============================================================
@@ -22,6 +23,7 @@ SELECT
     p.product_key,
     s.store_key,
     ch.channel_key,
+    op.order_profile_key,
 
     -- Natural keys kept for traceability
     f.order_date,
@@ -51,7 +53,18 @@ JOIN dim_product p
 JOIN dim_store s
     ON s.store_id = f.store_id
 JOIN dim_channel ch
-    ON ch.channel_id = f.channel_id;
+    ON ch.channel_id = f.channel_id
+JOIN raw_orders o
+    ON o.order_number = f.order_number
+JOIN dim_order_profile op
+    ON op.is_gift_wrapped = o.is_gift_wrapped
+   AND op.is_express_shipping = o.is_express_shipping
+   AND op.is_loyalty_redeemed = o.is_loyalty_redeemed
+   AND op.is_promo_applied = o.is_promo_applied
+   AND op.is_employee_purchase = o.is_employee_purchase
+   AND op.is_online_pickup = o.is_online_pickup
+   AND op.is_fragile = o.is_fragile
+   AND op.is_oversized = o.is_oversized;
 
 -- ============================================================
 -- VERIFICATION
@@ -72,6 +85,7 @@ SELECT
            OR product_key IS NULL
            OR store_key IS NULL
            OR channel_key IS NULL
+           OR order_profile_key IS NULL
     ) = 0 THEN 'PASS' ELSE 'FAIL -- NULL surrogate key' END AS result
 FROM fact_sales;
 
