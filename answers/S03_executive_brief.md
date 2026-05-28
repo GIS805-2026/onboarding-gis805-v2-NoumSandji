@@ -18,8 +18,12 @@ ou une adresse courriel, peuvent être écrasées sans risque analytique majeur.
 - **Grain :** une ligne de `fact_sales` représente une ligne de commande, identifiée par `(order_number, sale_line_id)`.
 - **Mesures utilisées :** `line_total` pour les ventes, `margin_amount` pour la marge brute, et `margin_pct` calculée comme `SUM(margin_amount) / SUM(line_total)`.
 - **Dimension principale :** `dim_store`, car le scénario S03 porte sur le changement de région du magasin Gatineau.
+- **Clé naturelle :** `store_id` identifie le magasin réel. Dans le scénario, Gatineau garde `store_id = STR-004`.
+- **Clé substitut :** `store_key` identifie une version précise du magasin. `fact_sales.store_key` pointe vers la version de `dim_store` utilisée au moment de la vente.
+- **Pattern SCD Type 2 :** une nouvelle version reçoit une nouvelle `store_key`, avec `effective_date`, `end_date` et `is_current` pour délimiter la période de validité.
 - **SCD Type 1 :** utilisé pour les corrections sans valeur historique, comme `store_name`.
 - **SCD Type 2 :** recommandé pour `dim_store.region`, car une fusion régionale ne doit pas réécrire les ventes passées.
+- **Documentation structurelle :** le schéma SCD est documenté dans `docs/scd-store-schema.md`.
 - **Hypothèse :** le magasin Gatineau passe de `Outaouais` à `Québec` à partir du `2026-03-01`.
 
 ## Preuve SQL
@@ -241,7 +245,7 @@ make check
 duckdb db/nexamart.duckdb -cmd ".headers on" -cmd ".mode markdown" < sql/scd/type1_vs_type2_demo.sql
 ```
 
-Trois contrôles ont été effectués :
+Les contrôles suivants ont été effectués :
 
 1. **Réconciliation du total des ventes.** Le total global reste identique
    avant et après simulation : environ `474 182,96 $`. Le Type 1 ne change donc
@@ -255,6 +259,15 @@ Trois contrôles ont été effectués :
    (`NexaMart Gatineau`) possède deux versions : l'ancienne en `Outaouais`
    fermée au `2026-02-28`, et la nouvelle en `Québec` active à partir du
    `2026-03-01`. Une seule version reste courante avec `is_current = true`.
+
+4. **Régions NULL.** Le rapport régional vérifie que les ventes ne sont pas
+   regroupées dans une région manquante. Le contrôle `region IS NULL` retourne
+   `0`, donc aucune ligne de fait n'est classée dans une région inconnue.
+
+5. **Cas limites SCD.** Les contrôles ajoutés vérifient qu'il n'y a pas de
+   période incohérente (`end_date < effective_date`), pas de double version
+   courante par `store_id`, que `STR-004` possède bien deux versions après
+   Type 2, et qu'aucune vente ne pointe vers une `store_key` orpheline.
 
 Ces contrôles confirment que le Type 1 réattribue les ventes historiques
 d'Outaouais à Québec, tandis que le Type 2 conserve la vérité historique sans

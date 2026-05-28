@@ -155,3 +155,58 @@ ORDER BY total_sales DESC;
 -- ------------------------------------------------------------
 
 
+
+-- ------------------------------------------------------------
+-- 5. Validations SCD Type 2 et qualite du rapport
+-- ------------------------------------------------------------
+-- Ces controles documentent les cas limites mentionnes dans le feedback S03.
+
+-- 5.1 Aucune vente ne doit etre regroupee dans une region NULL.
+SELECT
+    'null_region_in_sales_report' AS check_name,
+    COUNT(*) AS null_region_rows,
+    CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'FAIL' END AS result
+FROM fact_sales f
+JOIN dim_store s
+    ON f.store_key = s.store_key
+WHERE s.region IS NULL;
+
+-- 5.2 Une seule version courante doit exister par magasin naturel.
+SELECT
+    'one_current_store_version' AS check_name,
+    COUNT(*) AS stores_with_multiple_current_versions,
+    CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'FAIL' END AS result
+FROM (
+    SELECT store_id
+    FROM dim_store
+    WHERE is_current = TRUE
+    GROUP BY store_id
+    HAVING COUNT(*) > 1
+);
+
+-- 5.3 Les dates de validite ne doivent pas etre incoherentes.
+SELECT
+    'valid_scd_date_ranges' AS check_name,
+    COUNT(*) AS invalid_ranges,
+    CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'FAIL' END AS result
+FROM dim_store
+WHERE end_date IS NOT NULL
+  AND end_date < effective_date;
+
+-- 5.4 Le magasin Gatineau doit avoir deux versions apres Type 2.
+SELECT
+    'gatineau_two_versions' AS check_name,
+    COUNT(*) AS gatineau_versions,
+    CASE WHEN COUNT(*) = 2 THEN 'PASS' ELSE 'FAIL' END AS result
+FROM dim_store
+WHERE store_id = 'STR-004';
+
+-- 5.5 Les faits doivent toujours pointer vers une store_key existante.
+SELECT
+    'orphan_fact_store_key' AS check_name,
+    COUNT(*) AS orphan_store_keys,
+    CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'FAIL' END AS result
+FROM fact_sales f
+LEFT JOIN dim_store s
+    ON f.store_key = s.store_key
+WHERE s.store_key IS NULL;

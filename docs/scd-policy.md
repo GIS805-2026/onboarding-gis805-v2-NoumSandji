@@ -39,6 +39,22 @@ doit conserver son historique.
 | `product_name` | Type 1 | Correction de nom ou de typo, sans valeur analytique historique. |
 | `unit_cost` | Type 1 ou fait séparé | Le coût utilisé pour calculer la marge doit être cohérent avec la vente; si les coûts changent souvent, ils doivent être historisés ou capturés au grain de la vente. |
 
+## Pattern SCD Type 2
+
+Pour les attributs historises en Type 2, NexaMart utilise le pattern suivant :
+
+| Colonne | Role |
+|---|---|
+| `*_id` | Cle naturelle stable de l'entite metier. Exemple : `store_id` identifie le magasin reel. |
+| `*_key` | Cle substitut de l'entrepot. En Type 2, elle identifie une version precise de l'entite. |
+| `effective_from` ou `effective_date` | Date de debut de validite de la version. |
+| `effective_to` ou `end_date` | Date de fin de validite de la version. Une valeur ouverte indique la version active. |
+| `is_current` | Indique la version courante. Une seule version courante doit exister par cle naturelle. |
+
+Les tables de faits doivent pointer vers la cle substitut (`*_key`) correspondant a la version valide au moment de l'evenement. Ainsi, une vente historique conserve son contexte original meme si la dimension change plus tard.
+
+Pour le scenario S03, `fact_sales.store_key` pointe vers une version precise de `dim_store`. Quand Gatineau passe de `Outaouais` a `Quebec`, `store_id = STR-004` reste stable, mais une nouvelle `store_key` est creee pour la version `Quebec`.
+
 ## Règle de décision
 
 - Type 1 : correction simple sans impact sur les rapports historiques.

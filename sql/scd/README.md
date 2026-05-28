@@ -66,6 +66,44 @@ Le pourcentage de marge est calcule avec :
 
 Il ne faut pas sommer des pourcentages ligne par ligne.
 
+## Schema et pattern SCD Type 2
+
+Le schema du pattern SCD Type 2 est documente dans :
+
+```text
+docs/scd-store-schema.md
+```
+
+Points cles :
+
+- `store_id` est la cle naturelle du magasin reel.
+- `store_key` est la cle substitut d'une version du magasin.
+- `fact_sales.store_key` pointe vers une version precise de `dim_store`.
+- `effective_date` et `end_date` delimitent la periode de validite.
+- `is_current` indique la version active.
+- Une seule version courante doit exister par `store_id`.
+
+Dans le scenario Gatineau, `STR-004` garde le meme `store_id`, mais recoit une nouvelle `store_key` lorsque la region passe de `Outaouais` a `Quebec`.
+
+## Controle des regions NULL
+
+Le rapport regional doit verifier que les ventes ne sont pas regroupees dans une region manquante.
+
+Controle recommande :
+
+```sql
+SELECT
+    'null_region_in_sales_report' AS check_name,
+    COUNT(*) AS null_region_rows,
+    CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'FAIL' END AS result
+FROM fact_sales f
+JOIN dim_store s
+    ON f.store_key = s.store_key
+WHERE s.region IS NULL;
+```
+
+Dans l'execution S03 validee, le nombre de regions NULL est `0`. Si une region `NULL` apparait, elle doit etre isolee dans un groupe `Unknown` ou corrigee dans `dim_store` avant publication du rapport.
+
 ## Test SCD Type 1
 
 Le Type 1 correspond a un `UPDATE` direct :
