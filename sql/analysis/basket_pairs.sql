@@ -59,8 +59,8 @@ ORDER BY baskets_together DESC, pair_line_revenue DESC;
 -- 3. Operational order profiles from the junk dimension
 -- ------------------------------------------------------------
 SELECT
-    op.profile_name,
-    COUNT(DISTINCT f.order_number) AS orders,
+    op.profile_name AS profile_label,
+    COUNT(DISTINCT f.order_number) AS n_orders,
     COUNT(*) AS order_lines,
     ROUND(SUM(f.line_total), 2) AS revenue,
     ROUND(AVG(f.line_total), 2) AS avg_line_total
@@ -68,7 +68,7 @@ FROM fact_sales f
 JOIN dim_order_profile op
     ON op.order_profile_key = f.order_profile_key
 GROUP BY op.profile_name
-ORDER BY orders DESC, revenue DESC
+ORDER BY n_orders DESC, revenue DESC
 LIMIT 20;
 
 -- ------------------------------------------------------------
@@ -133,3 +133,64 @@ SELECT
     COUNT(DISTINCT order_profile_key) AS profiles_used,
     COUNT(*) FILTER (WHERE order_profile_key IS NULL) AS null_profile_keys
 FROM fact_sales;
+
+-- 4.7 raw order flags should be present and binary before building the junk dimension.
+WITH flag_quality AS (
+    SELECT 'is_gift_wrapped' AS flag_name, COUNT(*) FILTER (WHERE is_gift_wrapped IS NULL) AS null_flags, COUNT(*) FILTER (WHERE CAST(is_gift_wrapped AS INTEGER) NOT IN (0, 1)) AS out_of_domain_flags FROM raw_orders
+    UNION ALL
+    SELECT 'is_express_shipping', COUNT(*) FILTER (WHERE is_express_shipping IS NULL), COUNT(*) FILTER (WHERE CAST(is_express_shipping AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_loyalty_redeemed', COUNT(*) FILTER (WHERE is_loyalty_redeemed IS NULL), COUNT(*) FILTER (WHERE CAST(is_loyalty_redeemed AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_promo_applied', COUNT(*) FILTER (WHERE is_promo_applied IS NULL), COUNT(*) FILTER (WHERE CAST(is_promo_applied AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_employee_purchase', COUNT(*) FILTER (WHERE is_employee_purchase IS NULL), COUNT(*) FILTER (WHERE CAST(is_employee_purchase AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_online_pickup', COUNT(*) FILTER (WHERE is_online_pickup IS NULL), COUNT(*) FILTER (WHERE CAST(is_online_pickup AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_fragile', COUNT(*) FILTER (WHERE is_fragile IS NULL), COUNT(*) FILTER (WHERE CAST(is_fragile AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_oversized', COUNT(*) FILTER (WHERE is_oversized IS NULL), COUNT(*) FILTER (WHERE CAST(is_oversized AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+)
+SELECT
+    'raw_order_flags_quality' AS check_name,
+    SUM(null_flags) AS total_null_flags,
+    SUM(out_of_domain_flags) AS total_out_of_domain_flags,
+    CASE
+        WHEN SUM(null_flags) = 0 AND SUM(out_of_domain_flags) = 0 THEN 'PASS'
+        ELSE 'FAIL'
+    END AS result
+FROM flag_quality;
+
+-- 4.8 profile distribution: highlights dominant and rare profiles for sensitivity review.
+SELECT
+    op.profile_name AS profile_label,
+    COUNT(DISTINCT f.order_number) AS n_orders,
+    COUNT(*) AS order_lines,
+    ROUND(100.0 * COUNT(DISTINCT f.order_number) / SUM(COUNT(DISTINCT f.order_number)) OVER (), 2) AS pct_orders
+FROM fact_sales f
+JOIN dim_order_profile op
+    ON op.order_profile_key = f.order_profile_key
+GROUP BY op.profile_name
+ORDER BY n_orders DESC, profile_label
+LIMIT 20;
+
+-- 4.9 small sample to manually verify flags map to the expected order profile key.
+SELECT
+    r.order_number,
+    f.order_profile_key,
+    op.profile_name AS profile_label,
+    CAST(r.is_gift_wrapped AS INTEGER) AS is_gift_wrapped,
+    CAST(r.is_express_shipping AS INTEGER) AS is_express_shipping,
+    CAST(r.is_loyalty_redeemed AS INTEGER) AS is_loyalty_redeemed,
+    CAST(r.is_fragile AS INTEGER) AS is_fragile,
+    CAST(r.is_oversized AS INTEGER) AS is_oversized
+FROM raw_orders r
+JOIN fact_sales f
+    ON f.order_number = r.order_number
+JOIN dim_order_profile op
+    ON op.order_profile_key = f.order_profile_key
+QUALIFY ROW_NUMBER() OVER (PARTITION BY r.order_number ORDER BY f.sale_line_id) = 1
+ORDER BY r.order_number
+LIMIT 10;
+

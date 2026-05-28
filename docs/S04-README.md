@@ -38,10 +38,18 @@ make generate
 
 - Fermer toute session DuckDB ou SQLTools qui garde `db/nexamart.duckdb` ouvert avant de lancer `make load`.
 - Tous les chemins de ce README sont relatifs a la racine du depot. Aucun chemin absolu n'est requis pour reproduire S04 sur un clone propre.
+- Verifier que `db/nexamart.duckdb` n'est pas versionne comme source de verite : il est regenere par `make load`.
 
 ## Comment reproduire
 
-Depuis la racine du depot :
+Depuis la racine du depot, sur un clone propre :
+
+```bash
+make generate
+make load
+```
+
+Si les CSV sont deja presents et n'ont pas change, `make load` suffit :
 
 ```bash
 make load
@@ -74,8 +82,8 @@ duckdb db/nexamart.duckdb -cmd ".headers on" -cmd ".mode markdown" < sql/analysi
 
 ```sql
 SELECT
-    op.profile_name,
-    COUNT(DISTINCT f.order_number) AS orders,
+    op.profile_name AS profile_label,
+    COUNT(DISTINCT f.order_number) AS n_orders,
     COUNT(*) AS order_lines,
     ROUND(SUM(f.line_total), 2) AS revenue,
     ROUND(AVG(f.line_total), 2) AS avg_line_total
@@ -83,7 +91,7 @@ FROM fact_sales f
 JOIN dim_order_profile op
     ON op.order_profile_key = f.order_profile_key
 GROUP BY op.profile_name
-ORDER BY orders DESC, revenue DESC
+ORDER BY n_orders DESC, revenue DESC
 LIMIT 20;
 ```
 
@@ -147,6 +155,8 @@ ORDER BY baskets_together DESC, pair_line_revenue DESC;
 | Cles `order_profile_key` orphelines | 0 |
 | Doublons au grain `(order_number, sale_line_id)` | 0 |
 | Self-pairs dans l'analyse panier | 0 |
+| Flags `raw_orders` nuls | 0 |
+| Flags `raw_orders` hors domaine `0/1` | 0 |
 
 ## Resultats business utilises
 
@@ -169,6 +179,21 @@ ORDER BY baskets_together DESC, pair_line_revenue DESC;
 | Clothing | Grocery | 61 | 22 786,96 $ |
 | Electronics | Sports & Outdoors | 60 | 15 276,54 $ |
 | Electronics | Pet Supplies | 55 | 32 689,96 $ |
+
+
+## Checks ajoutes apres feedback
+
+Le feedback S04 demandait de documenter les cas limites. Le fichier `sql/analysis/basket_pairs.sql` inclut maintenant :
+
+- un controle des flags nuls et hors domaine `0/1` dans `raw_orders` ;
+- une distribution des profils pour reperer les profils dominants et rares ;
+- un petit echantillon de commandes pour verifier manuellement que les flags sources pointent vers le bon `order_profile_key`.
+
+Pour executer seulement les analyses S04 :
+
+```bash
+duckdb db/nexamart.duckdb -cmd ".headers on" -cmd ".mode markdown" < sql/analysis/basket_pairs.sql
+```
 
 ## Validation finale
 

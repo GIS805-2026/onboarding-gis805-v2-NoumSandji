@@ -10,7 +10,7 @@ Les commandes `standard_order` restent le profil dominant de NexaMart, mais plus
 
 L'analyse de panier montre aussi que les opportunités de ventes croisées ne sont pas seulement dans les produits similaires. Les associations les plus utiles traversent souvent plusieurs categories. En particulier, `Pet Supplies` apparait dans plusieurs paires de categories a fort revenu, notamment avec `Clothing`, `Beauty & Health`, `Grocery` et `Electronics`.
 
-Ma recommandation est de tester des recommandations croisées autour de `Pet Supplies`, tout en suivant les profils `express_shipping`, `gift_wrapped` et `fragile` dans un tableau de bord operationnel.
+Ma recommandation est de tester des recommandations croisées autour de `Pet Supplies`, tout en suivant les profils `express_shipping`, `gift_wrapped` et `fragile` dans un tableau de bord operationnel. Le pilote peut viser un horizon de 8 semaines, avec un KPI cible de +3 % sur le panier moyen des commandes contenant `Pet Supplies`, sans degradation de la marge ni des delais de livraison.
 
 ## Décisions de modélisation
 
@@ -24,6 +24,15 @@ Ma recommandation est de tester des recommandations croisées autour de `Pet Sup
 
 Cette decision respecte le principe Kimball : les petits indicateurs binaires ou de faible cardinalite sont regroupes dans une junk dimension afin de garder la table de faits compacte et lisible.
 
+Exemples de granularite dans `dim_order_profile` :
+
+| order_profile_key | is_gift_wrapped | is_express_shipping | is_loyalty_redeemed | is_fragile | is_oversized | profile_name |
+|---:|---:|---:|---:|---:|---:|---|
+| 1 | 0 | 0 | 0 | 0 | 0 | `standard_order` |
+| 59 | 1 | 0 | 0 | 1 | 0 | `gift_wrapped + fragile` |
+
+Ces exemples montrent que la cle de profil represente une combinaison de drapeaux, et non une ligne de commande individuelle.
+
 ## Preuve
 
 **Profils operationnels**
@@ -32,8 +41,8 @@ La requete suivante agrège les ventes par profil de commande :
 
 ```sql
 SELECT
-    op.profile_name,
-    COUNT(DISTINCT f.order_number) AS orders,
+    op.profile_name AS profile_label,
+    COUNT(DISTINCT f.order_number) AS n_orders,
     COUNT(*) AS order_lines,
     ROUND(SUM(f.line_total), 2) AS revenue,
     ROUND(AVG(f.line_total), 2) AS avg_line_total
@@ -41,7 +50,7 @@ FROM fact_sales f
 JOIN dim_order_profile op
     ON op.order_profile_key = f.order_profile_key
 GROUP BY op.profile_name
-ORDER BY orders DESC, revenue DESC
+ORDER BY n_orders DESC, revenue DESC
 LIMIT 20;
 ```
 
@@ -119,6 +128,8 @@ Les controles suivants ont ete executes apres la mise a jour de `fact_sales` et 
 | Doublons au grain `(order_number, sale_line_id)` | 0 |
 | Lignes `raw_fact_sales` vs `fact_sales` | 2 147 = 2 147 |
 | Self-pairs dans l'analyse panier | 0 |
+| Flags `raw_orders` nuls ou hors domaine `0/1` | 0 |
+| Profils rares avec une seule commande | controles par distribution |
 
 Requetes de validation principales :
 
@@ -146,6 +157,33 @@ WHERE op.order_profile_key IS NULL;
 
 Resultat : 0 cle orpheline, donc l'integrite referentielle entre `fact_sales` et `dim_order_profile` est valide.
 
+
+```sql
+WITH flag_quality AS (
+    SELECT 'is_gift_wrapped' AS flag_name, COUNT(*) FILTER (WHERE is_gift_wrapped IS NULL) AS null_flags, COUNT(*) FILTER (WHERE CAST(is_gift_wrapped AS INTEGER) NOT IN (0, 1)) AS out_of_domain_flags FROM raw_orders
+    UNION ALL
+    SELECT 'is_express_shipping', COUNT(*) FILTER (WHERE is_express_shipping IS NULL), COUNT(*) FILTER (WHERE CAST(is_express_shipping AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_loyalty_redeemed', COUNT(*) FILTER (WHERE is_loyalty_redeemed IS NULL), COUNT(*) FILTER (WHERE CAST(is_loyalty_redeemed AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_promo_applied', COUNT(*) FILTER (WHERE is_promo_applied IS NULL), COUNT(*) FILTER (WHERE CAST(is_promo_applied AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_employee_purchase', COUNT(*) FILTER (WHERE is_employee_purchase IS NULL), COUNT(*) FILTER (WHERE CAST(is_employee_purchase AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_online_pickup', COUNT(*) FILTER (WHERE is_online_pickup IS NULL), COUNT(*) FILTER (WHERE CAST(is_online_pickup AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_fragile', COUNT(*) FILTER (WHERE is_fragile IS NULL), COUNT(*) FILTER (WHERE CAST(is_fragile AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+    UNION ALL
+    SELECT 'is_oversized', COUNT(*) FILTER (WHERE is_oversized IS NULL), COUNT(*) FILTER (WHERE CAST(is_oversized AS INTEGER) NOT IN (0, 1)) FROM raw_orders
+)
+SELECT
+    SUM(null_flags) AS total_null_flags,
+    SUM(out_of_domain_flags) AS total_out_of_domain_flags
+FROM flag_quality;
+```
+
+Resultat : 0 flag nul et 0 flag hors domaine `0/1`.
+
 ## Risques / limites
 
 - Les donnees sont synthetiques ; les resultats doivent etre confirmes avec des donnees de production avant decision commerciale.
@@ -159,3 +197,8 @@ Resultat : 0 cle orpheline, donc l'integrite referentielle entre `fact_sales` et
 Lancer un pilote de recommandations croisees autour de `Pet Supplies`, en priorisant les associations avec `Clothing`, `Beauty & Health`, `Grocery` et `Electronics`. En parallele, creer un tableau de bord operationnel par `profile_name` pour suivre les volumes de commandes standards, express, cadeau et fragile.
 
 La prochaine iteration devrait mesurer si ces recommandations augmentent le panier moyen sans degrader les delais de livraison ni la marge.
+
+
+## Traçabilité
+
+Les requetes ont ete executees manuellement dans DuckDB et les resultats ont ete reportes dans ce brief apres verification des controles d'integrite. L'usage de l'IA est documente dans `ai-usage.md`; les livrables S04 ont ete commits progressivement, notamment `S04 basket-flags-walkthrough`, `S04 readme + update ai-usage` et les ajouts d'analyse/brief associes.
