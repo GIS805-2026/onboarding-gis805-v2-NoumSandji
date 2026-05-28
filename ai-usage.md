@@ -1146,3 +1146,65 @@ Type 2. Sinon, les ventes et la marge historiques d'Outaouais sont réattribuée
 - **Validation :**
 J'ai comparé avec ce qui est attendu et cela correspondait.
 - **Justification :**  me rassurer que toutes les dimensions importantes sont prises en compte
+
+### 2026-05-27 - séance S04
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "on a parlé de junk dimension qui fait référence aux drapeaux dans la table de fait. peux-tu m'identifier les différents drapeaux présents dans la table de nexamart"
+- **Resultat :** L'IA m'a retourné la liste des 8 drapeaux présents dans les données S04 : `is_gift_wrapped`, `is_express_shipping`, `is_loyalty_redeemed`, `is_promo_applied`, `is_employee_purchase`, `is_online_pickup`, `is_fragile` et `is_oversized`. Elle m'a expliqué que ces colonnes sont des flags opérationnels de commande et qu'elles sont de bons candidats pour une junk dimension.
+- **Validation :** J'ai vérifié l'en-tête du fichier `data/synthetic/team_1802767793/s04/orders.csv`, qui contient bien ces 8 colonnes de drapeaux.
+- **Justification :** je voulais identifier les colonnes à regrouper dans la dimension junk avant de créer `dim_order_profile`.
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "combien de combinaisons distinctes de drapeau existent dans mes données"
+- **Resultat :** L'IA m'a expliqué comment compter les combinaisons distinctes des 8 drapeaux en construisant une clé avec les colonnes de flags. Elle m'a retourné le résultat de 97 combinaisons distinctes observées dans les données S04, sur 690 commandes. Elle m'a aussi expliqué que la junk dimension doit contenir les combinaisons réellement observées plutôt que les 256 combinaisons théoriques possibles.
+- **Validation :** J'ai utilisé ce résultat pour vérifier ensuite que `dim_order_profile` contenait 97 lignes après le chargement de la base.
+- **Justification :** je voulais justifier la taille réelle de la junk dimension et éviter de générer toutes les combinaisons théoriques.
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "on peut passer à la création de la dimension junk dim_order_profile avec clé subrogée + flags + nom de profil"
+- **Resultat :** L'IA m'a proposé une structure pour `dim_order_profile` avec `order_profile_key`, les 8 flags, `profile_name` et `loaded_at`. Elle m'a aussi proposé de créer les profils à partir des combinaisons distinctes de `raw_orders`, puis de générer des noms lisibles comme `standard_order`, `gift_wrapped + loyalty_redeemed` ou `online_pickup + fragile`.
+- **Validation :** J'ai exécuté `make load` et confirmé que `dim_order_profile` contient 97 lignes. J'ai aussi vérifié que la vue alias `junk_order_profile` existe et retourne le même nombre de lignes.
+- **Justification :** je voulais regrouper les flags opérationnels dans une dimension compacte et lisible au lieu de les garder directement dans la table de faits.
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "d'accord c'est bon on peut passer à la mise à jour de la table de fait"
+- **Resultat :** L'IA m'a expliqué qu'il fallait joindre `raw_fact_sales` à `raw_orders` par `order_number`, puis joindre `raw_orders` à `dim_order_profile` avec les 8 flags. Elle m'a proposé d'ajouter seulement `order_profile_key` dans `fact_sales` et de ne pas y ajouter les 8 flags.
+- **Validation :** J'ai exécuté `make load`. Les contrôles ont confirmé que `fact_sales` contient 2 147 lignes, que `order_profile_key` n'est jamais nul, qu'il n'y a pas de clé orpheline vers `dim_order_profile`, et que le grain `(order_number, sale_line_id)` reste unique.
+- **Justification :** je voulais que la table de faits référence la nouvelle junk dimension sans changer son grain ni l'alourdir avec les flags.
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "on va poursuivre avec le sprint 2 de la S04"
+- **Resultat :** L'IA m'a retourné une procédure globale pour le sprint 2 : créer `sql/analysis/basket_pairs.sql`, exécuter les requêtes pour obtenir les résultats, créer `docs/schema-v2.md`, créer le board brief, rédiger `answers/S04_executive_brief.md`, mettre à jour `ai-usage.md`, puis valider avec `make load` et `make check`. Elle m'a aussi proposé de documenter cette procédure dans `docs/worked-examples/s04-basket-flags-walkthrough.md`.
+- **Validation :** J'ai demandé à l'IA de relire `docs/lab-guides/GIS805-04_lab.md` et la section Sprint 2 des slides `GIS805-04_slides.pdf` pour vérifier que la procédure était alignée avec les consignes.
+- **Justification :** je voulais valider les étapes avant de créer les livrables du sprint 2.
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "d'accord on commence par l'étape 1"
+- **Resultat :** L'IA m'a retourné une proposition de fichier `sql/analysis/basket_pairs.sql` avec quatre blocs : top paires de produits achetés ensemble, paires de catégories, profils opérationnels via `dim_order_profile`, et validations d'intégrité. Elle m'a expliqué que l'analyse de panier devait utiliser une self-join de `fact_sales` sur `order_number`, avec `f1.product_key < f2.product_key` pour éviter les doublons inverses.
+- **Validation :** J'ai exécuté les requêtes moi-même dans DuckDB. La première requête a montré que la colonne `name` n'existait pas dans `dim_product`; j'ai confirmé que le bon nom était `product_name`, puis la requête a été corrigée.
+- **Justification :** je voulais produire l'analyse panier demandée au sprint 2 et obtenir des preuves SQL reproductibles.
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "voici les résultats des top paires de produits, paires de catégories et profils opérationnels"
+- **Resultat :** L'IA m'a aidé à interpréter les résultats. Elle m'a indiqué que `standard_order` est le profil dominant, que `loyalty_redeemed`, `express_shipping`, `gift_wrapped` et `fragile` sont les profils opérationnels suivants, que `Clothing + Sports & Outdoors` est la paire de catégories la plus fréquente, et que `Pet Supplies` revient dans plusieurs associations à fort revenu.
+- **Validation :** Les résultats ont été copiés depuis les requêtes exécutées manuellement dans DuckDB : `standard_order` = 118 commandes et 87 055,52 $, `Clothing + Sports & Outdoors` = 78 paniers, `Clothing + Pet Supplies` = 41 915,33 $, `fact_sales` = 2 147 lignes, 667 commandes, 95 profils utilisés et 0 `order_profile_key` nulle.
+- **Justification :** je voulais transformer les résultats SQL en constats business utilisables dans le board brief et le brief exécutif.
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "pour le schéma on doit faire le Mermaid"
+- **Resultat :** L'IA m'a retourné une proposition de `docs/schema-v2.md` avec un diagramme Mermaid ER. Le schéma montre `fact_sales`, les dimensions conformes existantes (`dim_date`, `dim_customer`, `dim_product`, `dim_store`, `dim_channel`) et la nouvelle dimension `dim_order_profile` reliée par `order_profile_key`.
+- **Validation :** J'ai relu le fichier `docs/schema-v2.md` et je l'ai poussé avec le commit `S04 basket schema V2`.
+- **Justification :** le guide S04 demande explicitement de produire `docs/schema-v2.md`.
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "on fait le board brief"
+- **Resultat :** L'IA m'a proposé la structure du board brief : question, constats clés, evidence 1 sur les profils de commande, evidence 2 sur les paires de produits, evidence 3 sur les paires de catégories, recommandation VP, décision de modélisation et validation. Elle m'a ensuite retourné le contenu du fichier `docs/board-briefs/s04-basket-flags.md`.
+- **Validation :** J'ai relu le board brief et je l'ai poussé avec le commit `S04 basket flags board brief`.
+- **Justification :** le board brief est demandé dans les fichiers à produire et sert de résumé décisionnel pour les opérations.
+
+- **modèle :** Codex basé sur GPT-5
+- **prompt :** "on crée le brief principal S04 et on l'améliore"
+- **Resultat :** L'IA m'a retourné une première version de `answers/S04_executive_brief.md` avec les sections obligatoires : Question du CEO, Réponse exécutive, Décisions de modélisation, Preuve, Validation, Risques / limites et Prochaine recommandation. Elle a aussi proposé d'améliorer la section de modélisation en ajoutant les dimensions existantes et de mettre les profils exacts comme `standard_order`, `loyalty_redeemed`, `express_shipping`, `gift_wrapped` et `fragile` en backticks.
+- **Validation :** J'ai relu le brief, demandé les ajustements sur les dimensions existantes et les noms de profils, puis vérifié que les sections obligatoires étaient présentes.
+- **Justification :** `answers/S04_executive_brief.md` est l'artefact principal de la remise S04.
