@@ -4,7 +4,7 @@
 
 Quels patterns de commande NexaMart sont importants pour les operations, et quels produits sont achetes ensemble ?
 
-## Reponse executive
+## Réponse exécutive
 
 Les commandes `standard_order` restent le profil dominant de NexaMart, mais plusieurs profils operationnels meritent un suivi specifique : `loyalty_redeemed`, `express_shipping`, `gift_wrapped` et `fragile`. La nouvelle dimension junk `dim_order_profile` transforme les 8 drapeaux techniques de commande en profils nommes et exploitables par les operations.
 
@@ -12,7 +12,7 @@ L'analyse de panier montre aussi que les opportunités de ventes croisées ne so
 
 Ma recommandation est de tester des recommandations croisées autour de `Pet Supplies`, tout en suivant les profils `express_shipping`, `gift_wrapped` et `fragile` dans un tableau de bord operationnel.
 
-## Decisions de modelisation
+## Décisions de modélisation
 
 - **Grain de `fact_sales` :** une ligne de commande, identifiee par `(order_number, sale_line_id)`.
 - **Dimension degeneree :** `order_number` reste dans `fact_sales`, car le numero de commande n'a pas d'attributs descriptifs propres.
