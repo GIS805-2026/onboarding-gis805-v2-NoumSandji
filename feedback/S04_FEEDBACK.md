@@ -1,25 +1,21 @@
 # Rétroaction automatisée -- S04 (Panier d'achat et drapeaux : les patterns que l'étoile simple ne couvre pas)
 
-_Générée le 2026-05-28T19:10:29+00:00 -- Run `20260528T190711Z-122cea87`_
+_Générée le 2026-05-29T13:00:36+00:00 -- Run `20260529T125432Z-0258cabb`_
 
-Ce document est produit par un pipeline reproductible (vérification SQL déterministe + analyse LLM du brief et de la déclaration IA). Une revue humaine précède toujours sa publication. **À ce stade expérimental, aucune note ni étiquette de niveau n'est diffusée : l'objectif est purement formatif.**
-
-> ⚠️ **Avertissement instructeur (à retirer avant publication) :** cette analyse a été générée avec `--skip-pull`. Le contenu correspond au commit local et **n'est peut-être pas la dernière version poussée par l'étudiant·e**.
+Ce document est produit par un pipeline reproductible (validation automatique du livrable + analyse LLM du brief et de la déclaration IA). Une revue humaine précède toujours sa publication. **À ce stade expérimental, aucune note ni étiquette de niveau n'est diffusée : l'objectif est purement formatif.**
 
 ---
 
 ## 1. Vérification automatique de la requête SQL
 
-La requête extraite de votre brief n'a pas pu être validée automatiquement. Quelques pistes constructives ci-dessous pour vous aider à la rendre exécutable et alignee avec la question posée.
-
-_Observation technique : colonnes manquantes (oracle): count_
+La requête extraite de votre brief s'exécute correctement et produit la forme attendue. Bon travail sur l'auto-validation.
 
 <details><summary>Requête analysée — cliquez pour déplier</summary>
 
 ```sql
 SELECT
-    op.profile_name,
-    COUNT(DISTINCT f.order_number) AS orders,
+    op.profile_name AS profile_label,
+    COUNT(DISTINCT f.order_number) AS n_orders,
     COUNT(*) AS order_lines,
     ROUND(SUM(f.line_total), 2) AS revenue,
     ROUND(AVG(f.line_total), 2) AS avg_line_total
@@ -27,73 +23,73 @@ FROM fact_sales f
 JOIN dim_order_profile op
     ON op.order_profile_key = f.order_profile_key
 GROUP BY op.profile_name
-ORDER BY orders DESC, revenue DESC
+ORDER BY n_orders DESC, revenue DESC
 LIMIT 20;
 ```
 
 </details>
 
-- Colonnes retournées : `profile_name, orders, order_lines, revenue, avg_line_total`
+- Colonnes retournées : `profile_label, n_orders, order_lines, revenue, avg_line_total`
 - Correspondance avec les colonnes attendues :
-  - `profile_label` → `profile_name`
-  - `count` → `(à ajouter ou renommer)`
-
-**Pistes :**
-> Synonymes acceptés par colonne:
-  profile_label: ['profile_label', 'label', 'profile', 'order_profile', 'basket_type', 'profil', 'nom_profil']
-  count: ['n_orders', 'count', 'nb_orders', 'order_count', 'nombre_commandes', 'total_orders', 'nb_commandes']
+  - `profile_label` → `profile_label`
+  - `count` → `n_orders`
+- Présence de NULLs dans des colonnes de groupement : `profile_label` =0. Pensez à documenter le traitement de ces cas.
 
 ## 2. Rétroaction pédagogique sur le brief
 
-> Très bon brief technique et décisionnel : modèle clair (grain et junk dimension) et validations SQL complètes, avec des recommandations commerciales actionnables sur Pet Supplies et les profils opérationnels. Il manque cependant la traçabilité (commits/usage IA) et des instructions reproductibles pour un clone propre.
+> Très bon travail : le modèle est clair, les validations sont complètes et la recommandation exécutive est actionnable avec KPI et horizon. Pour compléter, fournissez un petit diagramme du schéma et un script de vérification automatisé pour faciliter la reproduction.
 
 ### Observations par dimension
 
 **Model quality**
-- Observation : Le brief décrit explicitement le grain (order_number, sale_line_id), la conservation de order_number comme dimension dégénérée et la création d'une junk dimension dim_order_profile pour regrouper les 8 drapeaux.
-- Piste d'amélioration : Préciser un exemple concret de clé de profil (profile_key) et montrer un exemple de ligne de dim_order_profile pour illustrer la granularité des profils.
+- Observation : Le brief précise le grain (ligne de commande), conserve order_number comme dimension dégénérée et décrit la création de dim_order_profile pour regrouper 8 flags en profils exploitables.
+- Piste d'amélioration : Ajouter un diagramme de schéma (star schema) simple montrant fact_sales et dim_order_profile pour clarifier les jointures et les clés.
 
 **Validation quality**
-- Observation : Le candidat fournit des requêtes de validation, compte les lignes/factures, vérifie l'absence de clefs orphelines et signale 0 doublon au grain.
-- Piste d'amélioration : Ajouter des checks explicites pour cas limites (valeurs NULLs sur flags, distributions extrêmes) et un test de sensibilité sur petits sous-échantillons.
+- Observation : Le document fournit plusieurs requêtes de contrôle (comptages, clés orphelines, vérification des flags 0/1) et un tableau de résultats montrant 0 clés orphelines et 0 flags hors domaine.
+- Piste d'amélioration : Inclure une requête de validation montrant l'absence de duplication de profils rares et un test sur les NULLs après la création de dim_order_profile.
 
 **Executive justification**
-- Observation : La section 'Réponse exécutive' formule une recommandation claire : piloter des recommandations croisées autour de Pet Supplies et créer un tableau de bord par profil opérationnel.
-- Piste d'amélioration : Inclure un KPI cible chiffré (ex. augmentation attendue du panier moyen ou revenu) et un horizon temporel pour le pilote.
+- Observation : La section 'Réponse exécutive' propose une recommandation claire: piloter des recommandations croisées autour de Pet Supplies sur 8 semaines avec un KPI cible de +3 % sur le panier moyen.
+- Piste d'amélioration : Ajouter une estimation concise de l'impact financier attendu (p. ex. lift en CA) et le seuil d'acceptation pour décider du déploiement.
 
 **Process trace**
-- Observation : Aucune mention d'historique git, de commits incrémentaux ou d'une note sur l'usage d'IA n'apparaît dans le brief.
-- Piste d'amélioration : Ajouter le log de commits git (≥3 commits avec messages) et une note IA précisant outil, rôle et validation humaine.
+- Observation : La traçabilité mentionne des commits progressifs nommés (ex. 'S04 basket-flags-walkthrough', 'S04 readme + update ai-usage') et un fichier ai-usage.md documentant l'usage de l'IA.
+- Piste d'amélioration : Joindre le log de commits (liste courte avec timestamps) ou pointer vers le repo pour vérification rapide.
 
 **Reproducibility**
-- Observation : Le brief fournit les requêtes SQL de validation et d'analyse, mais il n'indique pas de README, scripts d'exécution automatiques ni instructions de configuration pour reproduire.
-- Piste d'amélioration : Fournir un README pas-à-pas et un script d'initialisation (DuckDB ou autre) permettant d'exécuter les requêtes sur un clone propre.
+- Observation : Les requêtes ont été exécutées manuellement dans DuckDB et les résultats reportés, mais aucun script de 'check' automatisé n'est fourni pour exécuter la reproduction en un clic.
+- Piste d'amélioration : Fournir un script de vérification (shell/SQL) ou un notebook DuckDB qui reproduit les contrôles principaux après clone.
 
 ## 3. Déclaration d'utilisation de l'IA
 
-> La déclaration est complète : elle liste les outils employés, les étapes d'utilisation, les validations humaines et plusieurs erreurs rencontrées. Attention : certains libellés d'outil restent un peu génériques (p.ex. "GitHub Copilot chat" sans version), ce qui empêche d'atteindre la note maximale.
+> La déclaration est détaillée et trace précisément quand et comment l'IA a été utilisée et validée par l'auteur. Cependant, certains outils sont décrits de façon générique (par ex. Copilot sans modèle/version), il faudrait préciser les versions/modèles lorsque possible.
 
 **Sujets bien couverts dans votre déclaration :**
 
-- outils utilisés (nom + version/modèle)
 - à quelle étape l'IA a été utilisée
 - comment la sortie a été validée par l'humain
 - limites ou erreurs observées
 
+**Sujets à ajouter ou expliciter pour la prochaine itération :**
+
+- outils utilisés (nom + version/modèle)
+
 ## 4. Pistes d'action pour la prochaine itération
 
-- Reprendre la requête de la section « Preuve » pour qu'elle s'exécute sur `db/nexamart.duckdb` et qu'elle produise la forme attendue (voir pistes en section 1).
+- Aucune correction technique nécessaire. Voir la section 2 pour des pistes d'approfondissement.
 
 ---
 
 ## 5. Traçabilité
 
-- **Run ID :** `20260528T190711Z-122cea87`
+- **Run ID :** `20260529T125432Z-0258cabb`
 - **Devoir :** `S04`
 - **Étudiant·e :** `NoumSandji`
-- **Commit analysé :** `f4f6825`
-- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260528T190711Z-122cea87/NoumSandji/`
+- **Commit analysé :** `73fef43`
+- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260529T125432Z-0258cabb/NoumSandji/`
 - **Prompts (SHA-256) :**
+  - `sql_extractor_system` : `90ee9e277de7a27f...`
   - `rubric_grader_system` : `505f32d1d8319d66...`
   - `ai_usage_grader_system` : `81cb7fdf89bda55a...`
 - **Fournisseur (rubrique) :** `openai`
