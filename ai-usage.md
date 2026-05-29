@@ -18,9 +18,9 @@
 
 <!-- Ajoutez vos entrées ci-dessous -->
 ### 2026-05-10 - séance S01
-- **modèle :** GitHub  Copilot chat
-- **prompt :**  "c'est quoi la différence entre c'est 03 commandes?"
-- **Resultat :**make generate : Génère vos données fictives uniques (fichiers CSV dans synthetic) à partir de scripts Python, en simulant des ventes, clients et produits pour NexaMart. C'est la base pour tout le cours — sans cela, pas de données à analyser.
+- **Modèle :** GitHub Copilot Chat dans VS Code (extension Copilot Chat; modèle exact non affiché par l'outil)
+- **Prompt :**  "c'est quoi la différence entre c'est 03 commandes?"
+- **Résultat :**make generate : Génère vos données fictives uniques (fichiers CSV dans synthetic) à partir de scripts Python, en simulant des ventes, clients et produits pour NexaMart. C'est la base pour tout le cours — sans cela, pas de données à analyser.
 
 make load : Charge ces CSV dans DuckDB (votre entrepôt), créant des tables brutes (staging) prêtes pour les transformations Kimball. Cela transforme les fichiers plats en base de données relationnelle.
 
@@ -29,9 +29,9 @@ make check : Exécute des vérifications automatiques (dans validation) pour s'a
 - **Validation :** J'ai comparé la réponse avec le resultat de mon exécution de commande
 - **Justification :** je voulais comprendre le fonctionnement de ces commandes
 
-- **modèle :** GitHub  Copilot chat
-- **prompt :** mais lorsque j'ai fait le make generate je n'ai pas dans la trace les fichiers cvs raw_..."
-- **Resultat :**Les fichiers CSV générés par make generate sont nommés avec le préfixe dim_ (ex. : dim_customer.csv, dim_product.csv) et placés dans data/synthetic/team_<votre_seed>/shared/, pas raw_. Ils simulent les données brutes des systèmes OLTP (dimensions de base pour clients, produits, dates, etc.), sans les faits de ventes encore.
+- **Modèle :** GitHub Copilot Chat dans VS Code (extension Copilot Chat; modèle exact non affiché par l'outil)
+- **Prompt :** mais lorsque j'ai fait le make generate je n'ai pas dans la trace les fichiers cvs raw_..."
+- **Résultat :**Les fichiers CSV générés par make generate sont nommés avec le préfixe dim_ (ex. : dim_customer.csv, dim_product.csv) et placés dans data/synthetic/team_<votre_seed>/shared/, pas raw_. Ils simulent les données brutes des systèmes OLTP (dimensions de base pour clients, produits, dates, etc.), sans les faits de ventes encore.
 
 Si vous ne les voyez pas dans la trace du terminal, c'est normal — make generate écrit silencieusement les fichiers. Vérifiez le dossier shared : vous devriez y trouver dim_channel.csv, dim_customer.csv, etc.
 
@@ -40,9 +40,9 @@ Pour le diagnostic S01, ces dimensions représentent les "systèmes opérationne
 - **Validation :** j'ai parcourru les répertoires listés pour avoir les mêmes informations fournies par l'agent
 - **Justification :** je voulais comprendre comment et où proviennent les données générées
 
-- **modèle :** GitHub  Copilot chat
-- **prompt :** "mais lorsque je fais le load, j'ai des fichiers raw_... qui sont chargés dans duckdb, d'ou viennent-ils?"
-- **Resultat :**D’où viennent les raw_... ?
+- **Modèle :** GitHub Copilot Chat dans VS Code (extension Copilot Chat; modèle exact non affiché par l'outil)
+- **Prompt :** "mais lorsque je fais le load, j'ai des fichiers raw_... qui sont chargés dans duckdb, d'ou viennent-ils?"
+- **Résultat :**D’où viennent les raw_... ?
 Quand vous lancez make load, le pipeline Python dans run_pipeline.py fait ceci :
 
 Il parcourt tous les CSV sous synthetic
@@ -59,9 +59,9 @@ c’est une table DuckDB créée automatiquement à partir de data/synthetic/...
 - **Justification :** je voulais comprendre comment et où proviennent les données générées
 
 
-- **modèle :** GitHub  Copilot chat
-- **prompt :** " maintenant on va poursuivre avec notre diagnostique des données transactionnelles pour répondre à la question du CEO. quel est le plan que tu me proposes? est ce qu'on ne va pas commencer pas bien comprendre la question du CEO avant de d'aller en profondeur dans le diagnostique"
-- **Resultat :** Oui, commencer par bien comprendre la question du CEO est essentiel : cela définit ce que tu cherches dans les données, avant de plonger dans le diagnostic. La question est "Quelles catégories déclinent dans quelles régions et pourquoi ?", ce qui se traduit en Kimball par :
+- **Modèle :** GitHub Copilot Chat dans VS Code (extension Copilot Chat; modèle exact non affiché par l'outil)
+- **Prompt :** " maintenant on va poursuivre avec notre diagnostique des données transactionnelles pour répondre à la question du CEO. quel est le plan que tu me proposes? est ce qu'on ne va pas commencer pas bien comprendre la question du CEO avant de d'aller en profondeur dans le diagnostique"
+- **Résultat :** Oui, commencer par bien comprendre la question du CEO est essentiel : cela définit ce que tu cherches dans les données, avant de plonger dans le diagnostic. La question est "Quelles catégories déclinent dans quelles régions et pourquoi ?", ce qui se traduit en Kimball par :
 
 Mesure : déclin des ventes (additive, par trimestre).
 Dimensions : catégorie (produit), région (magasin), temps (trimestre).
@@ -101,9 +101,9 @@ LIMIT 10;
 
 
 ### 2026-05-17 - séance S02
-- **modèle :** Codex basé sur GPT-5
-- **prompt :**  "tu peux m'expliquer le fichier s02-sample-brief.md"
-- **Resultat :** Oui. Ce fichier docs/s02-sample-brief.md est un exemple annoté du brief attendu pour la séance S02. Ce n’est pas le fichier à rendre : ton vrai livrable est indiqué au début, dans answers/S02_executive_brief.md.
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :**  "tu peux m'expliquer le fichier s02-sample-brief.md"
+- **Résultat :** Oui. Ce fichier docs/s02-sample-brief.md est un exemple annoté du brief attendu pour la séance S02. Ce n’est pas le fichier à rendre : ton vrai livrable est indiqué au début, dans answers/S02_executive_brief.md.
 Le but du brief est de répondre à la question du CEO :
 Quelles catégories de produits déclinent dans quelles régions, par trimestre ?
 Le document montre la structure attendue :
@@ -141,14 +141,14 @@ En gros, ce fichier est un modèle de ce qu’il faut produire : définition du 
 - **Validation :** J'ai comparé avec le contenu du fichier
 - **Justification :** je voulais comprendre ce que je dois faire
 
-- **modèle :** Codex avec chat GPT
-- **prompt :** "voici mon grain : **1 ligne = 1 ligne de commande** identifiée par (order_number, sale_line_id) concernant un produit,effectuée par un client dans un magasin par un canal de vente à une date donnée. , *« Génère un diagramme Mermaid erDiagram pour mon étoile NexaMart.
+- **Modèle :** Codex dans ChatGPT/Codex, basé sur GPT-5
+- **Prompt :** "voici mon grain : **1 ligne = 1 ligne de commande** identifiée par (order_number, sale_line_id) concernant un produit,effectuée par un client dans un magasin par un canal de vente à une date donnée. , *« Génère un diagramme Mermaid erDiagram pour mon étoile NexaMart.
 > Au centre : FACT_SALES au grain « une ligne de commande »
 > (order_number + sale_line_id), avec les mesures quantity, net_price,
 > line_total, discount_pct. Cinq dimensions reliées par FK :
 > dim_date, dim_product, dim_store, dim_customer, dim_channel.
 > Inclus le bloc dans un fichier Markdown. »*"
-- **Resultat :**
+- **Résultat :**
 ```mermaid
 erDiagram
     DIM_DATE     ||--o{ FACT_SALES : "order_date"
@@ -207,10 +207,10 @@ erDiagram
 - **Validation :** j'ai comparé avec celui attendu
 - **Justification :** je voulais me rassurer que mon modèle soit cohérent
 
-- **modèle :** Codex basé sur GPT-5
-- **prompt :** "tu vois mon fichier 01_dimfrom_raw.sql? j'aimerais que tu me crées et adaptes ces fichiers pour chacune de ces dimensions : dim_product, dim_customer, dim_store, dim_date,
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** "tu vois mon fichier 01_dimfrom_raw.sql? j'aimerais que tu me crées et adaptes ces fichiers pour chacune de ces dimensions : dim_product, dim_customer, dim_store, dim_date,
 dim_channel dans le repertoire dims"
-- **Resultat :**C’est fait. J’ai créé les 5 fichiers dans sql/dims :
+- **Résultat :**C’est fait. J’ai créé les 5 fichiers dans sql/dims :
 dim_product.sql
 dim_customer.sql
 dim_store.sql
@@ -222,9 +222,9 @@ J’ai aussi testé les 5 scripts sur une copie temporaire de ta base DuckDB : t
 - **Validation :** j'ai parcourru les répertoires listés pour avoir les mêmes informations fournies par l'agent
 - **Justification :** je voulais me rassurer que les fichiers soient créés sans erreurs
 
-- **modèle :** Codex basé sur GPT-5
-- **prompt :** " j'ai une question, est ce que CURRENT_DATE                            AS loaded_at est nécessaire pour toute les tables?"
-- **Resultat :** Non, ce n’est pas strictement nécessaire pour toutes les tables.
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** " j'ai une question, est ce que CURRENT_DATE                            AS loaded_at est nécessaire pour toute les tables?"
+- **Résultat :** Non, ce n’est pas strictement nécessaire pour toutes les tables.
 
 CURRENT_DATE AS loaded_at sert surtout à garder une trace de la date à laquelle la dimension a été chargée ou reconstruite. C’est une colonne technique utile pour l’audit, le debugging, ou pour savoir “quand cette table a été générée”.
 
@@ -235,9 +235,9 @@ Mais côté modèle métier, elle n’est pas indispensable. Les dimensions pour
 - **Validation :** pas de validation
 - **Justification :** juste pour me rassurer de la necessité de  cette colonne ou champ dans toutesles dimensions
 
-- **modèle :** Codex basé sur GPT-5
-- **prompt :** " make load"
-- **Resultat :** python src/run_pipeline.py
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** " make load"
+- **Résultat :** python src/run_pipeline.py
 
 -- Loading 24 CSVs into DuckDB --
 
@@ -391,9 +391,9 @@ NexaMart Validation: 15 PASS, 8 FAIL, 9 SKIP
 Results saved to validation/results/check_results.txt
 make: *** [Makefile:43: check] Error 1
 
-- **modèle :** Codex basé sur GPT-5
-- **prompt :** " est ce que qu'il y a une clé dans raw_fact_sale qui va nous permettre de relier la dim_promo avec fact_sales"
-- **Resultat :**Bonne question. Non, pas vraiment.
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** " est ce que qu'il y a une clé dans raw_fact_sale qui va nous permettre de relier la dim_promo avec fact_sales"
+- **Résultat :**Bonne question. Non, pas vraiment.
 
 Dans raw_fact_sales, les colonnes sont :
 
@@ -434,9 +434,9 @@ Et laisse discount_pct comme mesure non-additive dans FACT_SALES.
 - **Validation :** j'ai parcourru les colonnes de la table raw_fact_sales pour me rassurer qu'il n'y a pas de colonne permettant de faire une jointure avec la dimension dim_promo
 - **Justification :** je voulais me rassurer de l'existence de la relation entre les deux tables fact_sales et dim_promo
 
-**modèle :** Codex basé sur GPT-5
-- **prompt :** " tu lis mon fichier 02_fact_with_grain.sql, j'aimerais l'utiliser pour créer ma table de fait"
-- **Resultat :** J’ai créé ta table de fait ici : fact_sales.sql.
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** " tu lis mon fichier 02_fact_with_grain.sql, j'aimerais l'utiliser pour créer ma table de fait"
+- **Résultat :** J’ai créé ta table de fait ici : fact_sales.sql.
 Elle reprend le grain du template :
 sql
 
@@ -482,9 +482,9 @@ en t’assurant d’abord que la base DuckDB n’est pas ouverte dans VS Code.
 - **Validation :** j'ai vérifié le fichier a été crée
 - **Justification :** pour me rassurer que le script soit sans erreur
 
-- **modèle :** Codex basé sur GPT-5
-- **prompt :** " est ce que qu'il y a une clé dans raw_fact_sale qui va nous permettre de relier la dim_promo avec fact_sales"
-- **Resultat :**Bonne question. Non, pas vraiment.
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** " est ce que qu'il y a une clé dans raw_fact_sale qui va nous permettre de relier la dim_promo avec fact_sales"
+- **Résultat :**Bonne question. Non, pas vraiment.
 
 Dans raw_fact_sales, les colonnes sont :
 
@@ -525,9 +525,9 @@ Et laisse discount_pct comme mesure non-additive dans FACT_SALES.
 - **Validation :** j'ai parcourru les colonnes de la table raw_fact_sales pour me rassurer qu'il n'y a pas de colonne permettant de faire une jointure avec la dimension dim_promo
 - **Justification :** je voulais me rassurer de l'existence de la relation entre les deux tables fact_sales et dim_promo
 
-**modèle :** Codex basé sur GPT-5
-- **prompt :** " tu lis mon fichier 02_fact_with_grain.sql, j'aimerais l'utiliser pour créer ma table de fait"
-- **Resultat :** J’ai créé ta table de fait ici : fact_sales.sql.
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** " tu lis mon fichier 02_fact_with_grain.sql, j'aimerais l'utiliser pour créer ma table de fait"
+- **Résultat :** J’ai créé ta table de fait ici : fact_sales.sql.
 Elle reprend le grain du template :
 sql
 
@@ -573,9 +573,9 @@ en t’assurant d’abord que la base DuckDB n’est pas ouverte dans VS Code.
 - **Validation :** j'ai vérifié le fichier a été crée
 - **Justification :** pour me rassurer que le script soit sans erreur
 
-**modèle :** Codex basé sur GPT-5
-- **prompt :** "make load, make check"
-- **Resultat :**  make load
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** "make load, make check"
+- **Résultat :**  make load
 python src/run_pipeline.py
 
 -- Loading 24 CSVs into DuckDB --
@@ -693,9 +693,9 @@ make: *** [Makefile:43: check] Error 1
 - **Validation :** j'ai vérifié que les tables sont créées
 - **Justification :** pour me rassurer que tout soit correct
 
-**modèle :** Codex basé sur GPT-5
-- **prompt :** "j'ai cette erreur ERROR            Binder Error: Referenced column "is_current" not found in FROM clause!"
-- **Resultat :**  Oui, cette erreur vient de make check, pas de ta table de fait.
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** "j'ai cette erreur ERROR            Binder Error: Referenced column "is_current" not found in FROM clause!"
+- **Résultat :**  Oui, cette erreur vient de make check, pas de ta table de fait.
 Le check cherche cette colonne dans dim_customer :
 sql
 
@@ -841,8 +841,8 @@ Results saved to validation/results/check_results.txt
 make: *** [Makefile:43: check] Error 1
 - **Justification :** pour me rassurer que tout soit correct
 
- **modèle :** Codex basé sur GPT-5
-- **prompt :**"## SQL preuve
+ - **Modèle :** Codex basé sur GPT-5
+- **Prompt :**"## SQL preuve
 
 sql
 SELECT
@@ -911,7 +911,7 @@ possiblement lié aux remises efféctuées, à la saisonnalité ou à d'autres f
 **Recommandation :** Investiguer d'autres facteurs comme les chaines de ventes, la gestion des retours
 
 voilà un peu comment j'ai répondu à la question du CEO"
-- **Resultat :**
+- **Résultat :**
 Oui, ta réponse est dans la bonne direction, mais je corrigerais deux points importants.
 
 D’abord, comme ta nouvelle fact_sales utilise des clés substituts, ta requête devrait plutôt joindre comme ça :
@@ -964,9 +964,9 @@ LIMIT 10;
 
 ### 2026-05-22 - séance S03
 
-**modèle :** Codex basé sur GPT-5
-- **prompt :** "comment lancer les implémentation?"
-- **Resultat :** make generate
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** "comment lancer les implémentation?"
+- **Résultat :** make generate
 make load
 make check
 make generate
@@ -1018,9 +1018,9 @@ select count(*) from fact_sales;
 - **Justification :** je voulais me rassurer que la base soit correcte
 
 
-**modèle :** Codex basé sur GPT-5
-- **prompt :** "puisque dans le sprint 1 on nous recommande de faire au moins deux commits"
-- **Resultat :** Oui, exactement. Pour le Sprint 1, le prof recommande au moins deux commits parce qu’il veut voir ta progression, pas seulement le résultat final.
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** "puisque dans le sprint 1 on nous recommande de faire au moins deux commits"
+- **Résultat :** Oui, exactement. Pour le Sprint 1, le prof recommande au moins deux commits parce qu’il veut voir ta progression, pas seulement le résultat final.
 
 Je te propose cette séquence :
 
@@ -1060,11 +1060,11 @@ Donc la trace idéale serait :
 j'ai vérifié avec la recommandation faite dans le cours, j'ai suivi les étapes proposées et exécuté les commandes
 - **Justification :** je voulais me rassurer de la démarche à suivre
 
-**modèle :** Codex basé sur GPT-5
-- **prompt :** "d'accord merci, ce que je voulais faire avant de commencer à comparer les scd c'est de faire un premier rapport qui affichera les ventes ainsi que le pourcentage de la marge par region. est ce necessaire d'ajouter la catégorie de produit? et le segment de client
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** "d'accord merci, ce que je voulais faire avant de commencer à comparer les scd c'est de faire un premier rapport qui affichera les ventes ainsi que le pourcentage de la marge par region. est ce necessaire d'ajouter la catégorie de produit? et le segment de client
 
 je voulais faire cela avant de faire des simulations de changements de dimension et faire des comparaisons des rapports"
-- **Resultat :** Oui, ton idée est bonne : faire un rapport de référence avant les simulations SCD. Ça te donne un “avant” propre, puis tu montres comment le rapport change avec Type 1 vs Type 2.
+- **Résultat :** Oui, ton idée est bonne : faire un rapport de référence avant les simulations SCD. Ça te donne un “avant” propre, puis tu montres comment le rapport change avec Type 1 vs Type 2.
 
 Pour commencer, je te conseille un rapport simple par région :
 
@@ -1089,9 +1089,9 @@ Après relecture du cas de dimulation proposé dans le cours, j'ai trouvé égal
 - **Justification :** je voulais me rassurer d'être alignée avec le scénario proposé
 
 
-**modèle :** Codex basé sur GPT-5
-- **prompt :** "allons au sprint 2: on nous a donné la structure du fichier scd-policy"
-- **Resultat :** # Politique SCD — NexaMart
+- **Modèle :** Codex basé sur GPT-5
+- **Prompt :** "allons au sprint 2: on nous a donné la structure du fichier scd-policy"
+- **Résultat :** # Politique SCD — NexaMart
 
 ## Objectif
 
