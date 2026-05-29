@@ -1,6 +1,6 @@
 # Rétroaction automatisée -- S04 (Panier d'achat et drapeaux : les patterns que l'étoile simple ne couvre pas)
 
-_Générée le 2026-05-29T13:00:25+00:00 -- Run `20260529T125427Z-dfc5d65b`_
+_Générée le 2026-05-29T13:00:36+00:00 -- Run `20260529T125432Z-0258cabb`_
 
 Ce document est produit par un pipeline reproductible (validation automatique du livrable + analyse LLM du brief et de la déclaration IA). Une revue humaine précède toujours sa publication. **À ce stade expérimental, aucune note ni étiquette de niveau n'est diffusée : l'objectif est purement formatif.**
 
@@ -37,40 +37,43 @@ LIMIT 20;
 
 ## 2. Rétroaction pédagogique sur le brief
 
-> Très bon travail : le modèle est cohérent, la junk-dimension est bien conçue et les validations sont complètes. La recommandation business est claire et actionnable ; ajouter des artefacts de reproduction et des métriques financières détaillées renforcera la décision du board.
+> Très bon travail : le modèle est clair, les validations sont complètes et la recommandation exécutive est actionnable avec KPI et horizon. Pour compléter, fournissez un petit diagramme du schéma et un script de vérification automatisé pour faciliter la reproduction.
 
 ### Observations par dimension
 
 **Model quality**
-- Observation : Le brief décrit clairement le grain (ligne de commande (order_number, sale_line_id)), la junk-dimension dim_order_profile et la clé de jonction order_profile_key.
-- Piste d'amélioration : Ajouter un diagramme schématique (star schema) succinct pour rendre explicite les clés étrangères et faciliter la revue par l'équipe.
+- Observation : Le brief précise le grain (ligne de commande), conserve order_number comme dimension dégénérée et décrit la création de dim_order_profile pour regrouper 8 flags en profils exploitables.
+- Piste d'amélioration : Ajouter un diagramme de schéma (star schema) simple montrant fact_sales et dim_order_profile pour clarifier les jointures et les clés.
 
 **Validation quality**
-- Observation : Le document fournit plusieurs requêtes de contrôle (comptage de lignes, clés orphelines, tests de valeurs NULL/hors domaine) avec résultats (ex. 0 clés orphelines, 0 flags nuls).
-- Piste d'amélioration : Inclure un script de test automatisé (SQL ou CI) qui exécute ces contrôles pour pouvoir répéter les validations à chaque changement.
+- Observation : Le document fournit plusieurs requêtes de contrôle (comptages, clés orphelines, vérification des flags 0/1) et un tableau de résultats montrant 0 clés orphelines et 0 flags hors domaine.
+- Piste d'amélioration : Inclure une requête de validation montrant l'absence de duplication de profils rares et un test sur les NULLs après la création de dim_order_profile.
 
 **Executive justification**
-- Observation : La section 'Réponse exécutive' formule une recommandation concrète (pilote 8 semaines, KPI +3% panier moyen pour Pet Supplies) et priorise les profils opérationnels à suivre.
-- Piste d'amélioration : Préciser l'impact attendu en valeur absolue (ex. Δ revenu attendu) et le coût opérationnel estimé pour le pilote afin d'éclairer la décision du board.
+- Observation : La section 'Réponse exécutive' propose une recommandation claire: piloter des recommandations croisées autour de Pet Supplies sur 8 semaines avec un KPI cible de +3 % sur le panier moyen.
+- Piste d'amélioration : Ajouter une estimation concise de l'impact financier attendu (p. ex. lift en CA) et le seuil d'acceptation pour décider du déploiement.
 
 **Process trace**
-- Observation : La traçabilité indique que les requêtes ont été exécutées dans DuckDB, que l'usage de l'IA est documenté dans ai-usage.md et que des commits progressifs ont été faits (noms de commits listés).
-- Piste d'amélioration : Joindre l'historique git (extraits de logs) ou un lien vers le repo / commits clés pour faciliter l'audit.
+- Observation : La traçabilité mentionne des commits progressifs nommés (ex. 'S04 basket-flags-walkthrough', 'S04 readme + update ai-usage') et un fichier ai-usage.md documentant l'usage de l'IA.
+- Piste d'amélioration : Joindre le log de commits (liste courte avec timestamps) ou pointer vers le repo pour vérification rapide.
 
 **Reproducibility**
-- Observation : Le brief indique que les requêtes ont été exécutées manuellement dans DuckDB et que les livrables ont été committés, mais aucun script de reproduction automatisé n'est fourni.
-- Piste d'amélioration : Fournir un script 'run_checks.sh' ou un notebook/DuckDB script et un README avec les étapes exactes pour reproduire les analyses sur un clone propre.
+- Observation : Les requêtes ont été exécutées manuellement dans DuckDB et les résultats reportés, mais aucun script de 'check' automatisé n'est fourni pour exécuter la reproduction en un clic.
+- Piste d'amélioration : Fournir un script de vérification (shell/SQL) ou un notebook DuckDB qui reproduit les contrôles principaux après clone.
 
 ## 3. Déclaration d'utilisation de l'IA
 
-> La déclaration documente abondamment les interactions IA, les étapes d'utilisation et les validations manuelles. Cependant plusieurs mentions d'outils restent génériques (ex. Copilot sans modèle/version), ce qui empêche l'obtention du score maximal.
+> La déclaration est détaillée et trace précisément quand et comment l'IA a été utilisée et validée par l'auteur. Cependant, certains outils sont décrits de façon générique (par ex. Copilot sans modèle/version), il faudrait préciser les versions/modèles lorsque possible.
 
 **Sujets bien couverts dans votre déclaration :**
 
-- outils utilisés (nom + version/modèle)
 - à quelle étape l'IA a été utilisée
 - comment la sortie a été validée par l'humain
 - limites ou erreurs observées
+
+**Sujets à ajouter ou expliciter pour la prochaine itération :**
+
+- outils utilisés (nom + version/modèle)
 
 ## 4. Pistes d'action pour la prochaine itération
 
@@ -80,11 +83,11 @@ LIMIT 20;
 
 ## 5. Traçabilité
 
-- **Run ID :** `20260529T125427Z-dfc5d65b`
+- **Run ID :** `20260529T125432Z-0258cabb`
 - **Devoir :** `S04`
 - **Étudiant·e :** `NoumSandji`
 - **Commit analysé :** `73fef43`
-- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260529T125427Z-dfc5d65b/NoumSandji/`
+- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260529T125432Z-0258cabb/NoumSandji/`
 - **Prompts (SHA-256) :**
   - `sql_extractor_system` : `90ee9e277de7a27f...`
   - `rubric_grader_system` : `505f32d1d8319d66...`
